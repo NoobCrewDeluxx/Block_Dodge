@@ -14,7 +14,7 @@ WHITE = (255,255,255)
 running = True
 
 pygame.font.init()
-largeFont = pygame.font.SysFont("consolas",50)
+largeFont = pygame.font.SysFont("courier-new",50)
 mediumFont = pygame.font.SysFont("courier-new",25)
 smallFont = pygame.font.SysFont("courier-new",15)
 
@@ -64,13 +64,15 @@ class Label():
 class Button():
     def __init__(self,pos,text) -> None:
         self.surf = pygame.Surface(BUTTONSIZE)
-        self.surf.fill((0,0,0))
+        self.surf.fill((10,10,10))
         self.rect = self.surf.get_rect(center=pos)
         self.text = mediumFont.render(str(text),True,WHITE)
         self.text_Rect = self.text.get_rect(center=pos)
 
     def blitSelf(self):
+        
         screen.blit(self.text,self.text_Rect)
+        
 
 
 
@@ -83,8 +85,13 @@ titleLabel = Label((960,240),"Block Dodge","L")
 
 
 # MENU BUTTON ASSIGN
-
-startButtonMain = Button((960,400),"singleplayer")
+menuButtons =[
+Button((960,400),"Singleplayer"),
+Button((960,500),"Multiplayer"),
+Button((960,600),"Settings"),
+Button((960,700),"Credits"),
+Button((960,800),"Quit")
+]
 
 
 while running:
@@ -94,9 +101,9 @@ while running:
 
     titleLabel.blitSelf()
 
-    startButtonMain.blitSelf()
+    for i in menuButtons:
+        i.blitSelf()
 
-    screen.blit(startButtonMain.surf,(860,515))
     
 
 
