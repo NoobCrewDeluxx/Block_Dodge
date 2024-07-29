@@ -71,7 +71,9 @@ class Button():
 
     def blitSelf(self):
         
+        screen.blit(self.surf,self.rect)
         screen.blit(self.text,self.text_Rect)
+        
         
 
 
