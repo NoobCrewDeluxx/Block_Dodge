@@ -64,7 +64,7 @@ class Label():
 class Button():
     def __init__(self,pos,text) -> None:
         self.surf = pygame.Surface(BUTTONSIZE)
-        self.surf.fill((10,10,10))
+        self.surf.fill((5,5,5))
         self.rect = self.surf.get_rect(center=pos)
         self.text = mediumFont.render(str(text),True,WHITE)
         self.text_Rect = self.text.get_rect(center=pos)
