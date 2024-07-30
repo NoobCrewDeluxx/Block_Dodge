@@ -33,9 +33,7 @@ def eventHandler(events)-> bool:          # Event handler
             
         if event.type == QUIT:
             return False
-        
-
-        
+     
     return True
 
 class Error(Exception):
@@ -90,34 +88,41 @@ class Button():
             if event.type == MOUSEBUTTONDOWN:
                 if self.rect.collidepoint(event.pos):
                     pygame.mixer.music.play()
+                    self.surf.fill((20,20,30))
             
             if event.type == MOUSEBUTTONUP:
                 if self.rect.collidepoint(event.pos):
+                    self.surf.fill((10,10,20))
+                    global page
                     if self.description == "quit":
                         global running
                         running = False
                     
-                    if self.description == "singleplayer":
-                        pass
-                    if self.description == "multiplayer":
-                        pass
-                    if self.description == "settings":
-                        pass
-                    if self.description == "credits":
-                        pass
+                    elif self.description == "singleplayer":
+                        page = PAGES[1]
+                        
+                    elif self.description == "multiplayer":
+                        page = PAGES[2]
+                        
+                    elif self.description == "settings":
+                        page = PAGES[3]
+                        
+                    elif self.description == "credits":
+                        page = PAGES[4]
 
+                    elif self.description == "return":
+                        page = PAGES[0]
 
+                    else: print("lol idk what ur clicking")
 
 screen = pygame.display.set_mode(FRAMEDIM)
-
 
 # MENU LABEL ASSIGN
 
 mainTitleLabel = Label((960,240),"Block Dodge","L")
 
-
 # MENU BUTTON ASSIGN
-menuButtons =[
+mainMenuButtons =[
 Button((960,400),"Singleplayer"),
 Button((960,500),"Multiplayer"),
 Button((960,600),"Settings"),
@@ -125,10 +130,18 @@ Button((960,700),"Credits"),
 Button((960,800),"Quit")
 ]
 
+
+#
+
 #CREITS LABEL ASSIN
-creditsTitleLabel = Label((960,240),"Credits","L")
-
-
+creditsMenuLabels =[
+    Label((960,240),"Credits","L"),
+    Label((960,400),"Lead Development: Joseph Wilson","M"),
+    Label((960,500),"Visuals: Joseph Wilson","M"),
+    Label((960,600),"Msuic: RE-Logic","M"),
+    Label((960,700),"Programming: StackOverflow","M"),
+    Button((100,980),"Return")
+]
 
 
 page = PAGES[0]
@@ -137,15 +150,16 @@ while running:
     running = eventHandler(events)
     screen.fill((0,0,0))
 
-    
-
-    
-
     if page == "main":
         mainTitleLabel.blitSelf()
-        for i in menuButtons:
+        for i in mainMenuButtons:
             i.blitSelf()
             i.update(events)
+
+    elif page == "credits":
+        for i in creditsMenuLabels:
+            i.blitSelf()
+            creditsMenuLabels[-1].update(events)
 
     pygame.display.flip()
     clock.tick(FPS)
