@@ -1,11 +1,7 @@
 import pygame                       # import modules
 from pygame.locals import *
 
-
-chunk = 1024
-
 FPS=60                              # game fps
-
 
 FRAMEDIM = 1920,1080                # game constants
 FRAMECENTRE= 960,540
