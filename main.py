@@ -1,6 +1,9 @@
 import pygame                       # import modules
 from pygame.locals import *
 
+
+chunk = 1024
+
 FPS=60                              # game fps
 
 
@@ -19,11 +22,13 @@ mediumFont = pygame.font.SysFont("courier-new",25)
 smallFont = pygame.font.SysFont("courier-new",15)
 
 pygame.init()
+pygame.mixer.init()
 clock=pygame.time.Clock()
 
+pygame.mixer.music.load("assests/audio/click-15%.wav")
 
-def eventHandler()-> bool:          # Event handler                                              
-    for event in pygame.event.get():
+def eventHandler(events)-> bool:          # Event handler                                              
+    for event in events:
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
                 return False
@@ -31,8 +36,9 @@ def eventHandler()-> bool:          # Event handler
         if event.type == QUIT:
             return False
         
-    return True
 
+        
+    return True
 
 class Error(Exception):
     def __init__(self, *args: object) -> None:
@@ -57,24 +63,47 @@ class Label():
     def blitSelf(self):             # Method to render text onto the screen to reduce cluttering in essential areas
         screen.blit(self.text,self.text_rect)
 
-
-
-
-
 class Button():
-    def __init__(self,pos,text) -> None:
+    def __init__(self,pos,text) -> True:
         self.surf = pygame.Surface(BUTTONSIZE)
         self.surf.fill((5,5,5))
         self.rect = self.surf.get_rect(center=pos)
+        self.description = text
         self.text = mediumFont.render(str(text),True,WHITE)
         self.text_Rect = self.text.get_rect(center=pos)
 
-    def blitSelf(self):
+    def blitSelf(self) -> None:
         
         screen.blit(self.surf,self.rect)
         screen.blit(self.text,self.text_Rect)
         
-        
+    def update(self,events) -> None:
+        for event in events:
+            if event.type == MOUSEMOTION:
+                if self.rect.collidepoint(event.pos):
+                    self.surf.fill((10,10,20))
+
+                if not self.rect.collidepoint(event.pos):
+                    self.surf.fill((0,0,0))
+
+            if event.type == MOUSEBUTTONDOWN:
+                if self.rect.collidepoint(event.pos):
+                    pygame.mixer.music.play()
+            
+            if event.type == MOUSEBUTTONUP:
+                if self.rect.collidepoint(event.pos):
+                    if self.description.lower() == "quit":
+                        global running
+                        running = False
+                    
+                    if self.description.lower() == "singleplayer":
+                        pass
+                    if self.description.lower() == "multiplayer":
+                        pass
+                    if self.description.lower() == "settings":
+                        pass
+                    if self.description.lower() == "credits":
+                        pass
 
 
 
@@ -97,18 +126,17 @@ Button((960,800),"Quit")
 
 
 while running:
-
-    running = eventHandler()
+    events = pygame.event.get()
+    running = eventHandler(events)
     screen.fill((0,0,0))
-
-    titleLabel.blitSelf()
-
-    for i in menuButtons:
-        i.blitSelf()
 
     
 
+    for i in menuButtons:
+        i.blitSelf()
+        i.update(events)
 
+    titleLabel.blitSelf()
 
     pygame.display.flip()
     clock.tick(FPS)
