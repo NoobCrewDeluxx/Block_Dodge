@@ -10,6 +10,8 @@ BUTTONSIZE = (200,50)
 
 WHITE = (255,255,255)
 
+PAGES = ("main","singleplayer","multiplayer","settings","credits","in_game")
+
 running = True
 
 pygame.font.init()
@@ -111,7 +113,7 @@ screen = pygame.display.set_mode(FRAMEDIM)
 
 # MENU LABEL ASSIGN
 
-titleLabel = Label((960,240),"Block Dodge","L")
+mainTitleLabel = Label((960,240),"Block Dodge","L")
 
 
 # MENU BUTTON ASSIGN
@@ -123,7 +125,13 @@ Button((960,700),"Credits"),
 Button((960,800),"Quit")
 ]
 
+#CREITS LABEL ASSIN
+creditsTitleLabel = Label((960,240),"Credits","L")
 
+
+
+
+page = PAGES[0]
 while running:
     events = pygame.event.get()
     running = eventHandler(events)
@@ -131,11 +139,13 @@ while running:
 
     
 
-    for i in menuButtons:
-        i.blitSelf()
-        i.update(events)
+    
 
-    titleLabel.blitSelf()
+    if page == "main":
+        mainTitleLabel.blitSelf()
+        for i in menuButtons:
+            i.blitSelf()
+            i.update(events)
 
     pygame.display.flip()
     clock.tick(FPS)
