@@ -64,11 +64,14 @@ class Label():
         screen.blit(self.text,self.text_rect)
 
 class Button():
-    def __init__(self,pos,text) -> True:
+    def __init__(self,pos,text) -> None:
+
         self.surf = pygame.Surface(BUTTONSIZE)
         self.surf.fill((5,5,5))
         self.rect = self.surf.get_rect(center=pos)
-        self.description = text
+
+        self.description = text.lower()
+
         self.text = mediumFont.render(str(text),True,WHITE)
         self.text_Rect = self.text.get_rect(center=pos)
 
@@ -92,17 +95,17 @@ class Button():
             
             if event.type == MOUSEBUTTONUP:
                 if self.rect.collidepoint(event.pos):
-                    if self.description.lower() == "quit":
+                    if self.description == "quit":
                         global running
                         running = False
                     
-                    if self.description.lower() == "singleplayer":
+                    if self.description == "singleplayer":
                         pass
-                    if self.description.lower() == "multiplayer":
+                    if self.description == "multiplayer":
                         pass
-                    if self.description.lower() == "settings":
+                    if self.description == "settings":
                         pass
-                    if self.description.lower() == "credits":
+                    if self.description == "credits":
                         pass
 
 
