@@ -1,5 +1,6 @@
 import pygame                       # import modules
 from pygame.locals import *
+import time
 
 FPS=60                              # game fps
 
@@ -13,12 +14,14 @@ BLACK = (0,0,0)
 
 PAGES = ("main","singleplayer","multiplayer","settings","credits","in_game")
 
+
+
 running = True
 
 pygame.font.init()
 largeFont = pygame.font.SysFont("courier-new",50)
 mediumFont = pygame.font.SysFont("courier-new",25)
-smallFont = pygame.font.SysFont("courier-new",15)
+smallFont = pygame.font.SysFont("courier-new",20,True)
 
 pygame.init()
 pygame.mixer.init()
@@ -92,29 +95,57 @@ class Button():
                     self.surf.fill((20,20,30))
             
             if event.type == MOUSEBUTTONUP:
+                global page
+                global running
+                global selMapCard
+
                 if self.rect.collidepoint(event.pos):
                     self.surf.fill((10,10,20))
-                    global page
+                    
                     if self.description == "quit":
-                        global running
+                        
                         running = False
                     
                     elif self.description == "singleplayer":
                         page = PAGES[1]
+                        self.surf.fill((0,0,0))
                         
                     elif self.description == "multiplayer":
                         page = PAGES[2]
+                        self.surf.fill((0,0,0))
                         
                     elif self.description == "settings":
                         page = PAGES[3]
+                        self.surf.fill((0,0,0))
                         
                     elif self.description == "credits":
                         page = PAGES[4]
+                        self.surf.fill((0,0,0))
 
                     elif self.description == "return":
                         page = PAGES[0]
+                        self.surf.fill((0,0,0))
 
-                    else: print("lol idk what ur clicking")
+                    elif self.description =="next" and page == PAGES[1]:
+                        selMapCard += 1
+                    
+                    elif self.description =="previous" and page == PAGES[1]:
+                        selMapCard -= 1
+                        
+
+class mapPreview():
+    def __init__(self,map) -> None:
+
+        self.mapImage = pygame.image.load(f"assests/visual/MapCards/{map}.png")
+        self.mapImage_Rect = self.mapImage.get_rect(center=(960,500))
+        
+    def blitSelf(self):
+        screen.blit(self.mapImage,self.mapImage_Rect)
+        
+    def update(self,events,infocus):
+        pass
+
+
 
 screen = pygame.display.set_mode(FRAMEDIM)
 
@@ -146,67 +177,59 @@ returnButton = Button((100,980),"Return")
 #SINGLEPLAYER LABEL ASSIGN
 splayMenuTitle = Label((960,140),"Singleplayer","L")
 
-#SINGPLEPLAYER FRAME ASSIGN
-#Complex pages such as singplayer menu with many different elements
-#will use "frames" to hold stuff that are similar but are repitively used
+#SINGLEPLAYER BUTTON ASSIGN
 
-class mapPreview():
-    def __init__(self,text) -> None:
-        self.FRAMESIZE = (300,350)
-
-        self.surf = pygame.Surface(self.FRAMESIZE) #Frame Size
-        self.surf.fill((10,10,10))
-        self.rect = self.surf.get_rect(center=(960,400))
-
-        
-        self.mapImage = pygame.image.load(f"assests/visual/MapIcons/Terran.png")
-        self.mapImage_Rect = self.mapImage.get_rect(center=(960,375))
-        
-        self.text=mediumFont.render(str(text),True,WHITE)
-        self.text_Rect = self.text.get_rect(center=(960,500))
-
-        #self.PreviewNextButton = pygame.Surface()
-
-    def blitSelf(self):
-        screen.blit(self.surf,self.rect)
-        screen.blit(self.mapImage,self.mapImage_Rect)
-        screen.blit(self.text,self.text_Rect)
-        
-    def update(self,events,infocus):
-        pass
-
-
-
-
-
-page = PAGES[0]
-mapSelections = [
-    mapPreview("Nova"),
-    mapPreview("Solaris"),
-    mapPreview("Terran"),
-    mapPreview("Glacio"),
-    mapPreview("Lithos"),
-
+sPlayButtons = [
+        Button((1110,900),"Next"),
+        Button((810,900),"Previous")
 ]
+
+
+
+
+mapCards = [
+    mapPreview("Terran"),
+    mapPreview("Lithos"),
+    mapPreview("Glacio"),
+    mapPreview("Solaris"),
+    mapPreview("Nova"),
+]
+page = PAGES[1]
+selMapCard = 0
+
 
 while running:
     events = pygame.event.get()
     running = eventHandler(events)
     screen.fill((0,0,0))
 
+
     if page == "main":
         mainTitleLabel.blitSelf()
         for i in mainMenuButtons:
+                i.blitSelf()
+                i.update(events)
+                
+    elif page == "singleplayer":
+        if selMapCard >4:
+            selMapCard = 0
+        if selMapCard < 0:
+            selMapCard = 4
+
+        splayMenuTitle.blitSelf()
+        mapCards[selMapCard].blitSelf()
+        for i in sPlayButtons:
             i.blitSelf()
             i.update(events)
-            
+
+    elif page == "settings":
+        pass
+
     elif page == "credits":
         for i in creditsMenuLabels:
-            i.blitSelf()
+                i.blitSelf()
 
-    elif page == "singleplayer":
-        splayMenuTitle.blitSelf()
-        mapSelections[2].blitSelf()
+
 
     if page != "main":
         returnButton.blitSelf()
