@@ -123,26 +123,27 @@ mainTitleLabel = Label((960,240),"Block Dodge","L")
 
 # MENU BUTTON ASSIGN
 mainMenuButtons =[
-Button((960,400),"Singleplayer"),
-Button((960,500),"Multiplayer"),
-Button((960,600),"Settings"),
-Button((960,700),"Credits"),
-Button((960,800),"Quit")
+    Button((960,400),"Singleplayer"),
+    Button((960,500),"Multiplayer"),
+    Button((960,600),"Settings"),
+    Button((960,700),"Credits"),
+    Button((960,800),"Quit")
 ]
 
 
 #
 
-#CREITS LABEL ASSIN
+#CREDITS LABEL ASSIGN
 creditsMenuLabels =[
     Label((960,240),"Credits","L"),
     Label((960,400),"Lead Development: Joseph Wilson","M"),
     Label((960,500),"Visuals: Joseph Wilson","M"),
-    Label((960,600),"Msuic: RE-Logic","M"),
-    Label((960,700),"Programming: StackOverflow","M"),
-    Button((100,980),"Return")
+    Label((960,600),"Music: RE-Logic","M"),
+    Label((960,700),"Programming: Joseph Wilson","M"),
 ]
 
+#GENERAL RETURN BUTTON ASSIGN
+returnButton = Button((100,980),"Return")
 
 page = PAGES[0]
 while running:
@@ -155,11 +156,18 @@ while running:
         for i in mainMenuButtons:
             i.blitSelf()
             i.update(events)
-
+            
     elif page == "credits":
         for i in creditsMenuLabels:
             i.blitSelf()
-            creditsMenuLabels[-1].update(events)
+
+
+    if page != "main":
+        returnButton.blitSelf()
+        returnButton.update(events)
+
+    
+            
 
     pygame.display.flip()
     clock.tick(FPS)
