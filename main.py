@@ -9,6 +9,7 @@ FRAMECENTRE= 960,540
 BUTTONSIZE = (200,50)
 
 WHITE = (255,255,255)
+BLACK = (0,0,0)
 
 PAGES = ("main","singleplayer","multiplayer","settings","credits","in_game")
 
@@ -130,9 +131,6 @@ mainMenuButtons =[
     Button((960,800),"Quit")
 ]
 
-
-#
-
 #CREDITS LABEL ASSIGN
 creditsMenuLabels =[
     Label((960,240),"Credits","L"),
@@ -145,7 +143,52 @@ creditsMenuLabels =[
 #GENERAL RETURN BUTTON ASSIGN
 returnButton = Button((100,980),"Return")
 
+#SINGLEPLAYER LABEL ASSIGN
+splayMenuTitle = Label((960,140),"Singleplayer","L")
+
+#SINGPLEPLAYER FRAME ASSIGN
+#Complex pages such as singplayer menu with many different elements
+#will use "frames" to hold stuff that are similar but are repitively used
+
+class mapPreview():
+    def __init__(self,text) -> None:
+        self.FRAMESIZE = (300,350)
+
+        self.surf = pygame.Surface(self.FRAMESIZE) #Frame Size
+        self.surf.fill((10,10,10))
+        self.rect = self.surf.get_rect(center=(960,400))
+
+        
+        self.mapImage = pygame.image.load(f"assests/visual/GenAI_BlockDodge_Planet_Terran.png")
+        self.mapImage_Rect = self.mapImage.get_rect(center=(self.FRAMESIZE[0]/2,self.FRAMESIZE[1]/2))
+        
+        self.text=mediumFont.render(str(text),True,WHITE)
+        self.text_Rect = self.text.get_rect(center=(960,500))
+
+        #self.PreviewNextButton = pygame.Surface()
+
+    def blitSelf(self):
+        screen.blit(self.mapImage,self.mapImage_Rect)
+        screen.blit(self.surf,self.rect)
+        screen.blit(self.text,self.text_Rect)
+        
+    def update(self,events,infocus):
+        pass
+
+
+
+
+
 page = PAGES[0]
+mapSelections = [
+    mapPreview("Nova"),
+    mapPreview("Solaris"),
+    mapPreview("Terran"),
+    mapPreview("Glacio"),
+    mapPreview("Lithos"),
+
+]
+
 while running:
     events = pygame.event.get()
     running = eventHandler(events)
@@ -161,6 +204,9 @@ while running:
         for i in creditsMenuLabels:
             i.blitSelf()
 
+    elif page == "singleplayer":
+        splayMenuTitle.blitSelf()
+        mapSelections[2].blitSelf()
 
     if page != "main":
         returnButton.blitSelf()
