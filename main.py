@@ -159,8 +159,8 @@ class mapPreview():
         self.rect = self.surf.get_rect(center=(960,400))
 
         
-        self.mapImage = pygame.image.load(f"assests/visual/GenAI_BlockDodge_Planet_Terran.png")
-        self.mapImage_Rect = self.mapImage.get_rect(center=(self.FRAMESIZE[0]/2,self.FRAMESIZE[1]/2))
+        self.mapImage = pygame.image.load(f"assests/visual/MapIcons/Terran.png")
+        self.mapImage_Rect = self.mapImage.get_rect(center=(960,375))
         
         self.text=mediumFont.render(str(text),True,WHITE)
         self.text_Rect = self.text.get_rect(center=(960,500))
@@ -168,8 +168,8 @@ class mapPreview():
         #self.PreviewNextButton = pygame.Surface()
 
     def blitSelf(self):
-        screen.blit(self.mapImage,self.mapImage_Rect)
         screen.blit(self.surf,self.rect)
+        screen.blit(self.mapImage,self.mapImage_Rect)
         screen.blit(self.text,self.text_Rect)
         
     def update(self,events,infocus):
