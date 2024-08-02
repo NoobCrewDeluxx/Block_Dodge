@@ -1,6 +1,7 @@
 import pygame                       # import modules
 from pygame.locals import *
 import time
+import threading
 
 FPS=60                              # game fps
 
@@ -98,6 +99,7 @@ class Button():
                 global page
                 global running
                 global selMapCard
+                global changingAlpha
 
                 if self.rect.collidepoint(event.pos):
                     self.surf.fill((10,10,20))
@@ -127,27 +129,45 @@ class Button():
                         self.surf.fill((0,0,0))
 
                     elif self.description =="next" and page == PAGES[1]:
-                        selMapCard += 1
                     
+                        selMapCard += 1
+                        
                     elif self.description =="previous" and page == PAGES[1]:
                         selMapCard -= 1
-                        
 
-class mapPreview():
+
+
+class mapCard():
     def __init__(self,map) -> None:
 
         self.mapImage = pygame.image.load(f"assests/visual/MapCards/{map}.png")
         self.mapImage_Rect = self.mapImage.get_rect(center=(960,500))
         
-    def blitSelf(self):
-        screen.blit(self.mapImage,self.mapImage_Rect)
+    def blitSelf(self,infocus):
+        if not infocus:
+            pygame.transform.scale(self.mapImage,(150,300))
+            self.mapImage_Rect.move_ip(-300,0)
+            screen.blit(self.mapImage,self.mapImage_Rect)
+
+        
         
     def update(self,events,infocus):
         pass
 
+class sPlayBackground():
+    def __init__(self,map):
+        self.mapImage = pygame.image.load(f"assests/visual/MenuBG/Blur/{map}.png")
+        self.mapImage.set_alpha(90)
+        self.mapImage_Rect = self.mapImage.get_rect(center=FRAMECENTRE)
+
+    def blitSelf(self):
+        screen.blit(self.mapImage,self.mapImage_Rect)
+
+
 
 
 screen = pygame.display.set_mode(FRAMEDIM)
+
 
 # MENU LABEL ASSIGN
 
@@ -184,20 +204,30 @@ sPlayButtons = [
         Button((810,900),"Previous")
 ]
 
-
-
-
 mapCards = [
-    mapPreview("Terran"),
-    mapPreview("Lithos"),
-    mapPreview("Glacio"),
-    mapPreview("Solaris"),
-    mapPreview("Nova"),
+    mapCard("Terran"),
+    mapCard("Lithos"),
+    mapCard("Glacio"),
+    mapCard("Solaris"),
+    mapCard("Nova"),
 ]
-page = PAGES[1]
+
+sPlayBackgrounds = [
+    sPlayBackground("Terran"),
+    sPlayBackground("Lithos"),
+    sPlayBackground("Glacio"),
+    sPlayBackground("Solaris"),
+    sPlayBackground("Nova")
+
+]
 selMapCard = 0
 
 
+
+page = PAGES[1]
+
+
+changingAlpha =0
 while running:
     events = pygame.event.get()
     running = eventHandler(events)
@@ -216,8 +246,13 @@ while running:
         if selMapCard < 0:
             selMapCard = 4
 
+        sPlayBackgrounds[selMapCard].blitSelf()
         splayMenuTitle.blitSelf()
-        mapCards[selMapCard].blitSelf()
+        mapCards[selMapCard].blitSelf(True)
+        mapCards[selMapCard-1].blitSelf(False)
+        mapCards[selMapCard+1].blitSelf(False)
+        
+        
         for i in sPlayButtons:
             i.blitSelf()
             i.update(events)
