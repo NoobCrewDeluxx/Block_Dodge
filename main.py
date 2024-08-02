@@ -98,7 +98,9 @@ class Button():
             if event.type == MOUSEBUTTONUP:
                 global page
                 global running
+                global prevMapCard
                 global selMapCard
+                global nextMapCard
                 global changingAlpha
 
                 if self.rect.collidepoint(event.pos):
@@ -129,11 +131,14 @@ class Button():
                         self.surf.fill((0,0,0))
 
                     elif self.description =="next" and page == PAGES[1]:
-                    
+                        prevMapCard += 1
                         selMapCard += 1
+                        nextMapCard += 1
                         
                     elif self.description =="previous" and page == PAGES[1]:
+                        prevMapCard -= 1
                         selMapCard -= 1
+                        nextMapCard -= 1
 
 
 
@@ -148,9 +153,12 @@ class mapCard():
 
     def blitSelfLeft(self):
         pygame.transform.scale(self.mapImage,(150,300))
+        self.mapImage_Rect.center=(660,500)
         screen.blit(self.mapImage,self.mapImage_Rect)
+
     def blitSelfRight(self):
         pygame.transform.scale(self.mapImage,(150,300))
+        self.mapImage_Rect.center=(1260,500)
         screen.blit(self.mapImage,self.mapImage_Rect)
 
 
@@ -225,9 +233,18 @@ sPlayBackgrounds = [
     sPlayBackground("Nova")
 
 ]
+prevMapCard = 4
 selMapCard = 0
+nextMapCard = 1
 
+def boundaryFix(boundLeft,number, boundRight):
+    if number < boundLeft:
+        number = boundRight
+        
+    if number > boundRight:
+        number = boundLeft
 
+    return number
 
 page = PAGES[1]
 
@@ -246,16 +263,18 @@ while running:
                 i.update(events)
                 
     elif page == "singleplayer":
-        if selMapCard >4:
-            selMapCard = 0
-        if selMapCard < 0:
-            selMapCard = 4
+        
+        selMapCard = boundaryFix(0, selMapCard, 4)
+        prevMapCard = boundaryFix(0, prevMapCard, 4)
+        nextMapCard = boundaryFix(0, nextMapCard, 4)
 
         sPlayBackgrounds[selMapCard].blitSelf()
         splayMenuTitle.blitSelf()
+
+
         mapCards[selMapCard].blitSelfFocused()
-        mapCards[selMapCard-1].blitSelfLeft()
-        mapCards[selMapCard+1].blitSelfRight()
+        mapCards[prevMapCard].blitSelfLeft()
+        mapCards[nextMapCard].blitSelfRight()
         
         
         for i in sPlayButtons:
