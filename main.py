@@ -143,11 +143,16 @@ class mapCard():
         self.mapImage = pygame.image.load(f"assests/visual/MapCards/{map}.png")
         self.mapImage_Rect = self.mapImage.get_rect(center=(960,500))
         
-    def blitSelf(self,infocus):
-        if not infocus:
-            pygame.transform.scale(self.mapImage,(150,300))
-            self.mapImage_Rect.move_ip(-300,0)
-            screen.blit(self.mapImage,self.mapImage_Rect)
+    def blitSelfFocused(self):
+        screen.blit(self.mapImage,self.mapImage_Rect)
+
+    def blitSelfLeft(self):
+        pygame.transform.scale(self.mapImage,(150,300))
+        screen.blit(self.mapImage,self.mapImage_Rect)
+    def blitSelfRight(self):
+        pygame.transform.scale(self.mapImage,(150,300))
+        screen.blit(self.mapImage,self.mapImage_Rect)
+
 
         
         
@@ -248,9 +253,9 @@ while running:
 
         sPlayBackgrounds[selMapCard].blitSelf()
         splayMenuTitle.blitSelf()
-        mapCards[selMapCard].blitSelf(True)
-        mapCards[selMapCard-1].blitSelf(False)
-        mapCards[selMapCard+1].blitSelf(False)
+        mapCards[selMapCard].blitSelfFocused()
+        mapCards[selMapCard-1].blitSelfLeft()
+        mapCards[selMapCard+1].blitSelfRight()
         
         
         for i in sPlayButtons:
