@@ -28,7 +28,7 @@ pygame.init()
 pygame.mixer.init()
 clock=pygame.time.Clock()
 
-pygame.mixer.music.load("assests/audio/click-15%.wav")
+pygame.mixer.music.load("assets/audio/click-0%.wav")
 
 def eventHandler(events)-> bool:          # Event handler                                              
     for event in events:
@@ -145,21 +145,27 @@ class Button():
 class mapCard():
     def __init__(self,map) -> None:
 
-        self.mapImage = pygame.image.load(f"assests/visual/MapCards/{map}.png")
-        self.mapImage_Rect = self.mapImage.get_rect(center=(960,500))
-        
-    def blitSelfFocused(self):
-        screen.blit(self.mapImage,self.mapImage_Rect)
+        self.mapImage = pygame.image.load(f"assets/visual/MapCards/Pixelated/{map}.png")
+        self.scaledMapImage = pygame.image.load(f"assets/visual/MapCards/Pixelated/{map}.png")
 
-    def blitSelfLeft(self):
-        pygame.transform.scale(self.mapImage,(150,300))
-        self.mapImage_Rect.center=(660,500)
+        self.scaledMapImage = pygame.transform.scale_by(self.scaledMapImage,0.75)
+
+        self.scaledMapImage_Rect = self.scaledMapImage.get_rect()
+        self.mapImage_Rect = self.mapImage.get_rect()
+
+        
+        
+    def blitSelfCenter(self):
+        self.mapImage_Rect.center = (960,500)
         screen.blit(self.mapImage,self.mapImage_Rect)
+        
+    def blitSelfLeft(self):
+        self.scaledMapImage_Rect.center = (660,500)
+        screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
 
     def blitSelfRight(self):
-        pygame.transform.scale(self.mapImage,(150,300))
-        self.mapImage_Rect.center=(1260,500)
-        screen.blit(self.mapImage,self.mapImage_Rect)
+        self.scaledMapImage_Rect.center = (1260,500)
+        screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
 
 
         
@@ -169,7 +175,7 @@ class mapCard():
 
 class sPlayBackground():
     def __init__(self,map):
-        self.mapImage = pygame.image.load(f"assests/visual/MenuBG/Blur/{map}.png")
+        self.mapImage = pygame.image.load(f"assets/visual/MenuBG/Blur/{map}.png")
         self.mapImage.set_alpha(90)
         self.mapImage_Rect = self.mapImage.get_rect(center=FRAMECENTRE)
 
@@ -208,7 +214,7 @@ creditsMenuLabels =[
 returnButton = Button((100,980),"Return")
 
 #SINGLEPLAYER LABEL ASSIGN
-splayMenuTitle = Label((960,140),"Singleplayer","L")
+splayMenuTitle = Label((960,100),"Singleplayer","L")
 
 #SINGLEPLAYER BUTTON ASSIGN
 
@@ -272,7 +278,7 @@ while running:
         splayMenuTitle.blitSelf()
 
 
-        mapCards[selMapCard].blitSelfFocused()
+        mapCards[selMapCard].blitSelfCenter()
         mapCards[prevMapCard].blitSelfLeft()
         mapCards[nextMapCard].blitSelfRight()
         
