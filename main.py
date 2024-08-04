@@ -428,3 +428,5 @@ class Game():
 
 game = Game()
 game.run()
+inGame = inGame()
+inGame.run()
