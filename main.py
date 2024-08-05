@@ -448,15 +448,17 @@ class in_game():                        # I use subclasses to an extreme amount 
                 self.energy_per_shield_medium_hit = 10 # MegaWatts of power
                 self.fuelUsage = 0.01 # L per second
 
+
+
                 self.images = getImages("assets/visual/Sprites/player/stream")
                 for image in self.images:
                     surf = self.images[image]
-
                     surf = pygame.transform.scale_by(surf,0.25)
                     surf = pygame.transform.rotate(surf,-90)
+                    surf_size = surf.get_size()
 
                     self.images[image] = surf
-                self.rect = pygame.Rect(300,Game.screen.get_size()[1]/2,100,100)
+                self.rect = pygame.Rect(300,Game.screen.get_size()[1]/2,surf_size[0],surf_size[1])
             
         def __init__(self, game, map) -> None:
             
