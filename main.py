@@ -476,23 +476,23 @@ class in_game():                        # I use subclasses to an extreme amount 
             shipSpeed = self.speed
             fuelUsage = self.fuelUsage
             
-            if pressed_keys[K_LSHIFT]:
+            if pressed_keys[K_SPACE]:
                 frameSpeed = 'fast'
                 shipSpeed = self.speed+self.boostSpeed
                 fuelUsage = self.fuelUsage * 5
 
             if self.fuel > 0:
-                if pressed_keys[K_w]:
+                if pressed_keys[K_RIGHT]:
                     frame = f'ship_thrust_{frameSpeed}_forward'
                     game.ingame.distanceTravelled += shipSpeed/10
                     self.fuel -= fuelUsage
 
-                if pressed_keys[K_a]:
+                if pressed_keys[K_UP]:
                     self.rect.move_ip(0, -shipSpeed)
                     frame = f'ship_thrust_{frameSpeed}_right'
                     self.fuel -= fuelUsage
 
-                if pressed_keys[K_d]:
+                if pressed_keys[K_DOWN]:
                     self.rect.move_ip(0, shipSpeed)
                     frame = f'ship_thrust_{frameSpeed}_left'
                     self.fuel -= fuelUsage
@@ -548,7 +548,7 @@ class in_game():                        # I use subclasses to an extreme amount 
             dTSurf_rect = dTSurf.get_rect()
             dTSurf_rect.topright = (1900,20)
 
-            fuelSurf = Game.mediumFont.render(f"Fuel: {self.fuelUsed} L", True, (255,255,255))
+            fuelSurf = Game.mediumFont.render(f"Fuel: {self.fuelUsed} %", True, (255,255,255))
             fuelSurf_rect = fuelSurf.get_rect()
             fuelSurf_rect.topleft = (20,20)
 
@@ -576,7 +576,7 @@ class Game():  # all game constants are stored in this easier than globals class
     largeFont = pygame.font.SysFont("courier-new",50)
     mediumFont = pygame.font.SysFont("courier-new",25)
     smallFont = pygame.font.SysFont("courier-new",20,True)
-    screen = pygame.display.set_mode(size=(1920,1080),vsync=1,display=1)
+    screen = pygame.display.set_mode(size=(1920,1080),vsync=1,display=0)
     clock = pygame.time.Clock()
     Maps = ("Terran","Lithos","Glacio","Solaris","Nova")
     def __init__(self) -> None:
