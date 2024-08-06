@@ -37,30 +37,36 @@ class Label():   # the Label and Button objects are similar to that of the tkint
                  # generalised parameters. This also helps with consistency throughout the game so
                  # that my buttons don't look like how I was feeling when I coded them that day
 
-    def __init__(self,pos: tuple,text: str,font: pygame.font.Font) -> None:
+                 # by default the anchor for the label is center
+
+    def __init__(self,pos,text,**largs) -> None: 
             
-        self.text = font.render(text,True,WHITE)
-        self.text_rect = self.text.get_rect(center=pos)
+        self.text = largs.get("font",Game.mediumFont).render(text,True,WHITE) # defaults to medium font
+        self.text_rect = self.text.get_rect()
+        setattr(self.text_rect,largs.get("anchor","center"),pos)
         
     def render(self):                              
         Game.screen.blit(self.text,self.text_rect)
 
-
+getattr
 class Button():
-    def __init__(self,pos: tuple,text: str) -> None:
+    def __init__(self,pos,text,**bargs) -> None:
+        anchor = bargs.get("anchor","center")
 
         self.surf = pygame.Surface(BUTTONSIZE)
         self.surf.fill((5,5,5))
-        self.rect = self.surf.get_rect(center=pos)
+        self.rect = self.surf.get_rect()
+        setattr(self.rect,anchor,pos)
 
         self.description = text.lower()
 
         self.text = Game.mediumFont.render(text,True,WHITE)
-        self.text_Rect = self.text.get_rect(center=pos)
+        self.text_rect = self.text.get_rect()
+        setattr(self.text_rect,anchor,pos)
 
     def render(self) -> None:
         Game.screen.blit(self.surf,self.rect)
-        Game.screen.blit(self.text,self.text_Rect)
+        Game.screen.blit(self.text,self.text_rect)
              
     def run(self ,game ,events: list) -> None:
         global running
@@ -218,10 +224,9 @@ class main_menu():  # menu class type objects: they are the defining parts of th
 
     def __init__(self) -> None:
         self.labels = [
-            Label((960,240),"Block Dodge",Game.largeFont)
+            Label((960,240),"Block Dodge",font=Game.largeFont)
 
         ]
-        
         self.buttons = [
             Button((960,400),"Singleplayer"),
             Button((960,500),"Multiplayer"),
@@ -281,7 +286,7 @@ class singleplayer_menu():
         self.nextMapCard = 1
 
         self.labels = [
-            Label((960,100),"Select Map",Game.largeFont)
+            Label((960,100),"Select Map",font=Game.largeFont)
 
         ]
         self.buttons = [
@@ -336,7 +341,7 @@ class singleplayer_menu():
 class multiplayer_menu():
     def __init__(self) -> None:
         self.labels = [
-            Label((960,100),"Multiplayer",Game.largeFont)
+            Label((960,100),"Multiplayer",font=Game.largeFont)
 
         ]
         self.buttons = [
@@ -357,7 +362,7 @@ class settings_menu():
     def __init__(self) -> None:
 
         self.labels = [
-            Label((300,100),"Settings",Game.largeFont)
+            Label((300,100),"Settings",font=Game.largeFont)
 
         ]
 
@@ -395,11 +400,11 @@ class settings_menu():
 class credits_menu():
     def __init__(self) -> None:
         self.labels = [
-            Label((960,240),"Credits",Game.largeFont),
-            Label((960,400),"Lead Development: Joseph Wilson",Game.mediumFont),
-            Label((960,500),"Visuals: Joseph Wilson",Game.mediumFont),
-            Label((960,600),"Music: RE-Logic",Game.mediumFont),
-            Label((960,700),"Programming: Joseph Wilson",Game.mediumFont),
+            Label((960,240),"Credits",font=Game.largeFont),
+            Label((960,400),"Lead Development: Joseph Wilson",font=Game.mediumFont),
+            Label((960,500),"Visuals: Joseph Wilson",font=Game.mediumFont),
+            Label((960,600),"Music: RE-Logic",font=Game.mediumFont),
+            Label((960,700),"Programming: Joseph Wilson",font=Game.mediumFont),
         ]
 
         self.buttons = [
@@ -523,9 +528,17 @@ class in_game():                        # I use subclasses to an extreme amount 
         self.player = self.Player(game,selectedMap)
         self.screen = Game.screen
         self.distanceTravelled = 0
+        self.fuelUsed = round(self.player.fuel,2)
         self.selectedMap = selectedMap
         self.running = True
         self.game = game
+
+        self.Labels = [
+            Label((1900,1060),f"Distance: {self.distanceTravelled}"),
+            Label((20,20),f"Fuel: {self.fuelUsed} %")
+
+
+        ]
 
     def run(self):
         while self.running: # additionally to having a surplus of subclasses in_game() runs its own game loop that allows for better
@@ -542,7 +555,9 @@ class in_game():                        # I use subclasses to an extreme amount 
             self.player.run(self.game,self.screen,events)
 
             self.distanceTravelled=round(self.distanceTravelled,1)
-            self.fuelUsed = round(self.player.fuel,3)
+            self.fuelUsed = round(self.player.fuel,2)
+
+            self.Labels
 
             dTSurf = Game.mediumFont.render(f"Distance: {self.distanceTravelled} Km", True, (255,255,255))
             dTSurf_rect = dTSurf.get_rect()
