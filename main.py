@@ -247,9 +247,7 @@ class main_menu():  # menu class type objects: they are the defining parts of th
 class singleplayer_menu():
     class mapCard():               # Sub Class use: I use sub classes to organise code even further than before. i.e mapCard isn't used
                                    # by any other class in the whole file so why put it outside singpleplayer_menu().
-
-        def __init__(self,map: str) -> None:
-
+        def __init__(self, map: str) -> None:
             self.mapName = map
 
             self.mapImage = pygame.image.load(f"assets/visual/MapCards/Pixelated/{map}.png")
@@ -267,18 +265,39 @@ class singleplayer_menu():
         
         def renderBG(self):
             Game.screen.blit(self.mapImageBG,self.mapImage_RectBG)
+            self.desc = None
 
         def renderCenter(self):
             self.mapImage_Rect.center = (960,500)
             Game.screen.blit(self.mapImage,self.mapImage_Rect)
             
-        def renderLeft(self):
+        def renderLeft(self,):
             self.scaledMapImage_Rect.center = (660,500)
             Game.screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
 
-        def renderRight(self):
+        def renderRight(self,):
             self.scaledMapImage_Rect.center = (1260,500)
             Game.screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
+
+        def run(self,events,desc:str):
+            mousepos = pygame.mouse.get_pos()
+            for event in events:
+                if desc == "left": # Button identifier
+                    if event.type == MOUSEBUTTONDOWN and self.scaledMapImage_Rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
+                        pygame.mixer.music.play()
+                    if event.type == MOUSEBUTTONUP and self.scaledMapImage_Rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
+                        game.singleplayerMenu.prevMapCard += 1
+                        game.singleplayerMenu.selMapCard += 1
+                        game.singleplayerMenu.nextMapCard += 1
+
+                mousepos = pygame.mouse.get_pos()
+                if desc == "right": # Button identifier
+                    if event.type == MOUSEBUTTONDOWN and self.scaledMapImage_Rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
+                        pygame.mixer.music.play()
+                    if event.type == MOUSEBUTTONUP and self.scaledMapImage_Rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
+                        game.singleplayerMenu.prevMapCard -= 1
+                        game.singleplayerMenu.selMapCard -= 1
+                        game.singleplayerMenu.nextMapCard -= 1
     
     def __init__(self) -> None:
         self.prevMapCard = 4
@@ -322,13 +341,22 @@ class singleplayer_menu():
         self.nextMapCard = self.boundaryFix(0, self.nextMapCard, 4)
 
         self.selMapName = str(self.mapCards[self.selMapCard].mapName)
-        print(self.selMapName)
+        
+        self.mapCards[self.prevMapCard].run(events,"left")
+        self.mapCards[self.nextMapCard].run(events,"right")
 
         self.mapCards[self.selMapCard].renderBG()
         self.mapCards[self.prevMapCard].renderLeft()
         self.mapCards[self.selMapCard].renderCenter()
         self.mapCards[self.nextMapCard].renderRight()
+
         
+
+        
+        
+
+        print(self.prevMapCard)
+        print(self.nextMapCard)
 
         for label in self.labels:
             label.render()
@@ -573,13 +601,6 @@ class in_game():                        # I use subclasses to an extreme amount 
             pygame.display.flip()
             Game.clock.tick(FPS)
         
-
-
-
-
-
-
-
 
 class Game():  # all game constants are stored in this easier than globals class. It allows me to access any of the variables anywhere
                # in the file. Although it may be seen as contemporary, i see it as useful thus why it exists. (I was also running into
