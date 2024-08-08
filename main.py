@@ -10,8 +10,6 @@ FPS=60                              # game fps
 FRAMEDIM = 1920,1080                # game constants
 FRAMECENTRE= 960,540
 
-BUTTONSIZE = (200,50)
-
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 
@@ -37,7 +35,7 @@ class Label():   # the Label and Button objects are similar to that of the tkint
                  # generalised parameters. This also helps with consistency throughout the game so
                  # that my buttons don't look like how I was feeling when I coded them that day
 
-                 # by default the anchor for the label is center
+                 # by default the anchor for the label abd button is center
 
     def __init__(self,pos,text,**largs) -> None: 
             
@@ -51,9 +49,10 @@ class Label():   # the Label and Button objects are similar to that of the tkint
 getattr
 class Button():
     def __init__(self,pos,text,**bargs) -> None:
-        self.anchor = bargs.get("anchor","center")
-        self.buttonsize = bargs.get("size",BUTTONSIZE)
-        self.name = bargs.get("name","")
+        self.anchor = bargs.get("anchor","center")              # Default Anchor = Center
+        self.buttonsize = bargs.get("size",(200,50))            # Default Size = 200 wide ,50 high
+        self.name = bargs.get("name", None)                     # Default Name = None
+        self.alpha = bargs.get("alpha", 255)                    # Default Alpha = 255
 
         self.surf = pygame.Surface(self.buttonsize)
         self.surf.fill((5,5,5))
@@ -66,6 +65,8 @@ class Button():
         self.text_rect = self.text.get_rect()
         setattr(self.text_rect,self.anchor,pos)
 
+        self.surf.set_alpha(self.alpha)
+
     def render(self) -> None:
         Game.screen.blit(self.surf,self.rect)
         Game.screen.blit(self.text,self.text_rect)
@@ -73,7 +74,6 @@ class Button():
     def run(self ,game ,events: list) -> None:
         global running
         mousepos = pygame.mouse.get_pos()
-        mousepressed = pygame.mouse.get_pressed()[0]
         
         if not self.rect.collidepoint(mousepos):
             self.surf.fill((0,0,0))
@@ -152,7 +152,7 @@ class Button():
                 if self.rect.collidepoint(mousepos):
                     self.surf.fill((10,10,20))
 
-            elif (self.description =="next" and game.currentMenu == "singleplayer") or self.name == "splay_right":
+            elif (self.description =="next" and game.currentMenu == "singleplayer") or self.name == "sPlay_right":
                 if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
                     pygame.mixer.music.play()
                     self.surf.fill((20,20,30))
@@ -173,6 +173,14 @@ class Button():
                     game.singleplayerMenu.nextMapCard -= 1
                 if self.rect.collidepoint(mousepos):
                     self.surf.fill((10,10,20))
+
+            elif self.name=="sPlay_center":
+                if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
+                    pygame.mixer.music.play()
+                if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
+                    if game.singleplayerMenu.flipCard:
+                        game.singleplayerMenu.flipCard =False
+                    else: game.singleplayerMenu.flipCard = True
 
 
 class Slider: # Slider, W.I.P similar to the Button and Labels in that they can be used anywhere with general parameters
@@ -197,7 +205,8 @@ class Slider: # Slider, W.I.P similar to the Button and Labels in that they can 
         self.container_rect = pygame.Rect(self.slider_left_pos, self.slider_top_pos, self.size[0], self.size[1])
         self.button_rect = pygame.Rect(self.slider_left_pos+self.initial_val - 5, self.slider_top_pos, self.button_width, self.size[1])
 
-    def move_slider(self,mouse_pos):
+    def move_slider(self,mouse_pos): 
+        # moves slider button rect to mouse x position if mouse button 1 is down in the container rect and checks too see if slider button rect is outside container rect x value. Y value is unaffected
 
         if self.button_rect.left >= self.container_rect.left and self.button_rect.right <= self.container_rect.right:
                 self.button_rect.centerx = mouse_pos[0]
@@ -252,12 +261,14 @@ class singleplayer_menu():
         def __init__(self, map: str) -> None:
             self.mapName = map
 
-            self.mapImage = pygame.image.load(f"assets/visual/MapCards/Pixelated/{map}.png")
-            self.scaledMapImage = pygame.image.load(f"assets/visual/MapCards/Pixelated/{map}.png")
+            self.mapImage = pygame.image.load(f"assets/visual/MapCards/Previews/Pixelated/{map}.png")
+            self.mapDesc = pygame.image.load(f"assets/visual/MapCards/Descriptions/{map}.png")
+            self.scaledMapImage = pygame.image.load(f"assets/visual/MapCards/Previews/Pixelated/{map}.png")
             
             self.scaledMapImage = pygame.transform.scale_by(self.scaledMapImage,0.75)
 
             self.scaledMapImage_Rect = self.scaledMapImage.get_rect()
+            self.mapDesc_Rect = self.mapDesc.get_rect()
             self.mapImage_Rect = self.mapImage.get_rect()
             
             
@@ -265,58 +276,63 @@ class singleplayer_menu():
             self.mapImageBG.set_alpha(90)
             self.mapImage_RectBG = self.mapImageBG.get_rect(center=FRAMECENTRE)
 
+        # different render functions exist in the mapCard object purely to render scaled versions of the large image to different locations. It prevents a large amount of loading that could have been possible
+        # if a different approach was taken. This method loads 18 images, 12 scaled down 0.75x, 6 kept normal resolution. It can be time consuming switching to different methods. If it works it works.
         
         def renderBG(self):
-            self.desc = "back"
             Game.screen.blit(self.mapImageBG,self.mapImage_RectBG)
             self.desc = None
 
         def renderCenter(self):
-            self.desc = "center"
             self.mapImage_Rect.center = (960,500)
             Game.screen.blit(self.mapImage,self.mapImage_Rect)
             
         def renderLeft(self):
-            self.desc = "left"
             self.scaledMapImage_Rect.center = (660,500)
             Game.screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
 
         def renderRight(self):
-            self.desc = "right"
             self.scaledMapImage_Rect.center = (1260,500)
             Game.screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
 
+        def renderDesc(self):
+            self.mapDesc_Rect.center = (960,500)
+            Game.screen.blit(self.mapDesc,self.mapDesc_Rect)
+
     
     def __init__(self) -> None:
+        # selectors will define which map 
         self.prevMapCard = 4
         self.selMapCard = 0
         self.nextMapCard = 1
+
+        self.flipCard = False
 
         self.labels = [
             Label((960,100),"Select Map",font=Game.largeFont)
 
         ]
 
-
         self.buttons = [
             Button((1110,900),"Next"),
             Button((810,900),"Previous"),
             Button((100,980),"Return"),
             Button((960,1000),"Select"),
-            Button((660,500),"",name="sPlay_left",size=(300,600)),
-            Button((1260,500),"",name="sPlay_right",size=(300,600))
-
+            Button((660,500),"",name="sPlay_left",size=(300,600),alpha=0),      # a "name" keyword argument was used to prevent text from being displayed, despite the fact mapCards are rendered ontop of the buttons. 
+            Button((1260,500),"",name="sPlay_right",size=(300,600),alpha=0),    # note the size keyword arguement, which I specifically implemented for this use case. It may be used in the future which is why I fully implemented it
+            Button((960,500),"",name="sPlay_center",size=(300,600),alpha=0),    # also note that I used the **kwargs parameter method so I did not have to have to change the arguments for every Button and Label object.
         ]
 
-        self.mapCards = [
+        self.mapCards = [               # list of mapCard objects
             self.mapCard("Terran"),
             self.mapCard("Lithos"),
             self.mapCard("Glacio"),
             self.mapCard("Solaris"),
             self.mapCard("Nova")
         ]
-        
-    def boundaryFix(self,boundLeft: int,number: int, boundRight:int ):
+         
+    def boundaryFix(self,boundLeft: int,number: int, boundRight:int ): 
+        # boundLeft is by default 0 (the start of every list), number is the number being checked, boundRight is the length of the list of which the number is being checked against
         if number < boundLeft:
             number = boundRight
             
@@ -327,30 +343,39 @@ class singleplayer_menu():
 
     def run(self,game,events):
 
-        self.prevMapCard = self.boundaryFix(0, self.prevMapCard, 4)
-        self.selMapCard = self.boundaryFix(0, self.selMapCard, 4)
-        self.nextMapCard = self.boundaryFix(0, self.nextMapCard, 4)
+        # to prevent list of out of bounds error we check that the selector isn't outside of the length of items inside self.mapCards list, which contains the mapCard objects
+        self.prevMapCard = self.boundaryFix(0, self.prevMapCard, len(self.mapCards)-1)
+        self.selMapCard = self.boundaryFix(0, self.selMapCard, len(self.mapCards)-1)
+        self.nextMapCard = self.boundaryFix(0, self.nextMapCard, len(self.mapCards)-1)
 
         self.selMapName = str(self.mapCards[self.selMapCard].mapName)
         
         
-        
+
         self.mapCards[self.selMapCard].renderBG()
+        # to prevent abnormal visiuals we want the buttons to be rendered after the background but not before the mapCards
+
+        for button in self.buttons:     
+            button.render()
+
         self.mapCards[self.prevMapCard].renderLeft()
         self.mapCards[self.selMapCard].renderCenter()
         self.mapCards[self.nextMapCard].renderRight()
 
-        print(self.prevMapCard)
-        print(self.nextMapCard)
+
+        # renders map description ontop of map preview if the flipCard value is set to true via the button conditional statements
+        if self.flipCard:
+            self.mapCards[self.selMapCard].renderDesc()
+        
+
+
+        # selMapCard, prevMapCard, and nextMapCard updaters must go after this or before boundary fixing to prevent list out of range error
 
         for button in self.buttons:
-            button.render()
             button.run(game, events)
 
         for label in self.labels:
             label.render()
-
-
 
 
 class multiplayer_menu():
