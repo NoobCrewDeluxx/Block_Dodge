@@ -51,18 +51,20 @@ class Label():   # the Label and Button objects are similar to that of the tkint
 getattr
 class Button():
     def __init__(self,pos,text,**bargs) -> None:
-        anchor = bargs.get("anchor","center")
+        self.anchor = bargs.get("anchor","center")
+        self.buttonsize = bargs.get("size",BUTTONSIZE)
+        self.name = bargs.get("name","")
 
-        self.surf = pygame.Surface(BUTTONSIZE)
+        self.surf = pygame.Surface(self.buttonsize)
         self.surf.fill((5,5,5))
         self.rect = self.surf.get_rect()
-        setattr(self.rect,anchor,pos)
+        setattr(self.rect,self.anchor,pos)
 
         self.description = text.lower()
 
         self.text = Game.mediumFont.render(text,True,WHITE)
         self.text_rect = self.text.get_rect()
-        setattr(self.text_rect,anchor,pos)
+        setattr(self.text_rect,self.anchor,pos)
 
     def render(self) -> None:
         Game.screen.blit(self.surf,self.rect)
@@ -150,7 +152,7 @@ class Button():
                 if self.rect.collidepoint(mousepos):
                     self.surf.fill((10,10,20))
 
-            elif self.description =="next" and game.currentMenu == "singleplayer":
+            elif (self.description =="next" and game.currentMenu == "singleplayer") or self.name == "splay_right":
                 if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
                     pygame.mixer.music.play()
                     self.surf.fill((20,20,30))
@@ -161,7 +163,7 @@ class Button():
                 if self.rect.collidepoint(mousepos):
                     self.surf.fill((10,10,20))
 
-            elif self.description =="previous" and game.currentMenu == "singleplayer":
+            elif (self.description =="previous" and game.currentMenu == "singleplayer") or self.name == "sPlay_left":
                 if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
                     pygame.mixer.music.play()
                     self.surf.fill((20,20,30))
@@ -262,42 +264,28 @@ class singleplayer_menu():
             self.mapImageBG = pygame.image.load(f"assets/visual/MenuBG/Blur/{map}.png")
             self.mapImageBG.set_alpha(90)
             self.mapImage_RectBG = self.mapImageBG.get_rect(center=FRAMECENTRE)
+
         
         def renderBG(self):
+            self.desc = "back"
             Game.screen.blit(self.mapImageBG,self.mapImage_RectBG)
             self.desc = None
 
         def renderCenter(self):
+            self.desc = "center"
             self.mapImage_Rect.center = (960,500)
             Game.screen.blit(self.mapImage,self.mapImage_Rect)
             
-        def renderLeft(self,):
+        def renderLeft(self):
+            self.desc = "left"
             self.scaledMapImage_Rect.center = (660,500)
             Game.screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
 
-        def renderRight(self,):
+        def renderRight(self):
+            self.desc = "right"
             self.scaledMapImage_Rect.center = (1260,500)
             Game.screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
 
-        def run(self,events,desc:str):
-            mousepos = pygame.mouse.get_pos()
-            for event in events:
-                if desc == "left": # Button identifier
-                    if event.type == MOUSEBUTTONDOWN and self.scaledMapImage_Rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
-                        pygame.mixer.music.play()
-                    if event.type == MOUSEBUTTONUP and self.scaledMapImage_Rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
-                        game.singleplayerMenu.prevMapCard += 1
-                        game.singleplayerMenu.selMapCard += 1
-                        game.singleplayerMenu.nextMapCard += 1
-
-                mousepos = pygame.mouse.get_pos()
-                if desc == "right": # Button identifier
-                    if event.type == MOUSEBUTTONDOWN and self.scaledMapImage_Rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
-                        pygame.mixer.music.play()
-                    if event.type == MOUSEBUTTONUP and self.scaledMapImage_Rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
-                        game.singleplayerMenu.prevMapCard -= 1
-                        game.singleplayerMenu.selMapCard -= 1
-                        game.singleplayerMenu.nextMapCard -= 1
     
     def __init__(self) -> None:
         self.prevMapCard = 4
@@ -308,21 +296,26 @@ class singleplayer_menu():
             Label((960,100),"Select Map",font=Game.largeFont)
 
         ]
+
+
         self.buttons = [
             Button((1110,900),"Next"),
             Button((810,900),"Previous"),
             Button((100,980),"Return"),
-            Button((960,1000),"Select")
+            Button((960,1000),"Select"),
+            Button((660,500),"",name="sPlay_left",size=(300,600)),
+            Button((1260,500),"",name="sPlay_right",size=(300,600))
 
         ]
+
         self.mapCards = [
             self.mapCard("Terran"),
             self.mapCard("Lithos"),
             self.mapCard("Glacio"),
             self.mapCard("Solaris"),
-            self.mapCard("Nova"),
+            self.mapCard("Nova")
         ]
-
+        
     def boundaryFix(self,boundLeft: int,number: int, boundRight:int ):
         if number < boundLeft:
             number = boundRight
@@ -333,8 +326,6 @@ class singleplayer_menu():
         return number
 
     def run(self,game,events):
-        
-        
 
         self.prevMapCard = self.boundaryFix(0, self.prevMapCard, 4)
         self.selMapCard = self.boundaryFix(0, self.selMapCard, 4)
@@ -342,28 +333,24 @@ class singleplayer_menu():
 
         self.selMapName = str(self.mapCards[self.selMapCard].mapName)
         
-        self.mapCards[self.prevMapCard].run(events,"left")
-        self.mapCards[self.nextMapCard].run(events,"right")
-
+        
+        
         self.mapCards[self.selMapCard].renderBG()
         self.mapCards[self.prevMapCard].renderLeft()
         self.mapCards[self.selMapCard].renderCenter()
         self.mapCards[self.nextMapCard].renderRight()
 
-        
-
-        
-        
-
         print(self.prevMapCard)
         print(self.nextMapCard)
-
-        for label in self.labels:
-            label.render()
 
         for button in self.buttons:
             button.render()
             button.run(game, events)
+
+        for label in self.labels:
+            label.render()
+
+
 
 
 class multiplayer_menu():
