@@ -14,6 +14,7 @@ WHITE = (255,255,255)
 BLACK = (0,0,0)
 
 
+
 def getImages(folderPath): # this function is from some random guy on stackoverflow, too much effiency for my standards lmao
     filenames = [f for f in os.listdir(folderPath) if f.endswith('.png')]
     images = {}
@@ -24,31 +25,30 @@ def getImages(folderPath): # this function is from some random guy on stackoverf
     return images
 
 
-class Error(Exception):                             # Custom error message for specific use cases
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
-
-
-
 class Label():   # the Label and Button objects are similar to that of the tkinter Label and
                  # button objects in such a way that they can be used anywhere and with extremely
                  # generalised parameters. This also helps with consistency throughout the game so
                  # that my buttons don't look like how I was feeling when I coded them that day
 
-                 # by default the anchor for the label abd button is center
+                 # by default the anchor for the label and button is center
 
     def __init__(self,pos,text,**largs) -> None: 
             
-        self.text = largs.get("font",Game.mediumFont).render(text,True,WHITE) # defaults to medium font
+        self.text = largs.get("font",Game.mediumFont).render(text,True,(255,255,255)) # defaults to medium font
         self.text_rect = self.text.get_rect()
         setattr(self.text_rect,largs.get("anchor","center"),pos)
         
     def render(self):                              
         Game.screen.blit(self.text,self.text_rect)
 
-getattr
+
+
+
 class Button():
+    
     def __init__(self,pos,text,**bargs) -> None:
+        
+
         self.anchor = bargs.get("anchor","center")              # Default Anchor = Center
         self.buttonsize = bargs.get("size",(200,50))            # Default Size = 200 wide ,50 high
         self.name = bargs.get("name", None)                     # Default Name = None
@@ -61,7 +61,7 @@ class Button():
 
         self.description = text.lower()
 
-        self.text = Game.mediumFont.render(text,True,WHITE)
+        self.text = Game.mediumFont.render(text,True,(255,255,255))
         self.text_rect = self.text.get_rect()
         setattr(self.text_rect,self.anchor,pos)
 
@@ -72,7 +72,6 @@ class Button():
         Game.screen.blit(self.text,self.text_rect)
              
     def run(self ,game ,events: list) -> None:
-        global running
         mousepos = pygame.mouse.get_pos()
         
         if not self.rect.collidepoint(mousepos):
@@ -183,6 +182,36 @@ class Button():
                     else: game.singleplayerMenu.flipCard = True
 
 
+
+
+
+
+
+class main_menu():  # menu class type objects: they are the defining parts of the game that allow me to easily organise 
+                    # different menus and objects. Generally speaking they are self-sufficient meaning they define and manage 
+                    # their own variables only needing to be externally ran by the Game() class. An exception to this applies 
+                    # to the in_game() class.
+
+    def __init__(self) -> None:
+        self.labels = [
+            Label((960,240),"Block Dodge",font=Game.largeFont)
+
+        ]
+        self.buttons = [
+            Button((960,400),"Singleplayer"),
+            Button((960,500),"Multiplayer"),
+            Button((960,600),"Settings"),
+            Button((960,700),"Credits"),
+            Button((960,800),"Quit")
+
+        ]
+    def run(self,game,events):
+        for label in self.labels:
+            label.render()
+
+        for button in self.buttons:
+            button.render()
+            button.run(game,events)
 class Slider: # Slider, W.I.P similar to the Button and Labels in that they can be used anywhere with general parameters
               # iirc there is a similar class type object in tkinter. The majority of the code in __init__ was made by a
               # guy who did a tutorial on yt
@@ -228,42 +257,15 @@ class Slider: # Slider, W.I.P similar to the Button and Labels in that they can 
         return (button_val/val_range)*(self.max-self.min)+self.min
 
 
-class main_menu():  # menu class type objects: they are the defining parts of the game that allow me to easily organise 
-                    # different menus and objects. Generally speaking they are self-sufficient meaning they define and manage 
-                    # their own variables only needing to be externally ran by the Game() class. An exception to this applies 
-                    # to the in_game() class.
-
-    def __init__(self) -> None:
-        self.labels = [
-            Label((960,240),"Block Dodge",font=Game.largeFont)
-
-        ]
-        self.buttons = [
-            Button((960,400),"Singleplayer"),
-            Button((960,500),"Multiplayer"),
-            Button((960,600),"Settings"),
-            Button((960,700),"Credits"),
-            Button((960,800),"Quit")
-
-        ]
-    def run(self,game,events):
-        for label in self.labels:
-            label.render()
-
-        for button in self.buttons:
-            button.render()
-            button.run(game,events)
-
-
 class singleplayer_menu():
     class mapCard():               # Sub Class use: I use sub classes to organise code even further than before. i.e mapCard isn't used
                                    # by any other class in the whole file so why put it outside singpleplayer_menu().
         def __init__(self, map: str) -> None:
             self.mapName = map
 
-            self.mapImage = pygame.image.load(f"assets/visual/MapCards/Previews/Pixelated/{map}.png")
-            self.mapDesc = pygame.image.load(f"assets/visual/MapCards/Descriptions/{map}.png")
-            self.scaledMapImage = pygame.image.load(f"assets/visual/MapCards/Previews/Pixelated/{map}.png")
+            self.mapImage = pygame.image.load(f"Game/assets/visual/MapCards/Previews/Pixelated/{map}.png")
+            self.mapDesc = pygame.image.load(f"Game/assets/visual/MapCards/Descriptions/{map}.png")
+            self.scaledMapImage = pygame.image.load(f"Game/assets/visual/MapCards/Previews/Pixelated/{map}.png")
             
             self.scaledMapImage = pygame.transform.scale_by(self.scaledMapImage,0.75)
 
@@ -272,7 +274,7 @@ class singleplayer_menu():
             self.mapImage_Rect = self.mapImage.get_rect()
             
             
-            self.mapImageBG = pygame.image.load(f"assets/visual/MenuBG/Blur/{map}.png")
+            self.mapImageBG = pygame.image.load(f"Game/assets/visual/MenuBG/Blur/{map}.png")
             self.mapImageBG.set_alpha(90)
             self.mapImage_RectBG = self.mapImageBG.get_rect(center=FRAMECENTRE)
 
@@ -318,7 +320,7 @@ class singleplayer_menu():
             Button((810,900),"Previous"),
             Button((100,980),"Return"),
             Button((960,1000),"Select"),
-            Button((660,500),"",name="sPlay_left",size=(300,600),alpha=0),      # a "name" keyword argument was used to prevent text from being displayed, despite the fact mapCards are rendered ontop of the buttons. 
+            Button((660,500),"",name="sPlay_left",size=(300,600),alpha=0),      # a "name" keyword argument was used to prevent text from being displayed, despite the fact mapCards are rendered ontop of the Buttons. 
             Button((1260,500),"",name="sPlay_right",size=(300,600),alpha=0),    # note the size keyword arguement, which I specifically implemented for this use case. It may be used in the future which is why I fully implemented it
             Button((960,500),"",name="sPlay_center",size=(300,600),alpha=0),    # also note that I used the **kwargs parameter method so I did not have to have to change the arguments for every Button and Label object.
         ]
@@ -381,7 +383,8 @@ class singleplayer_menu():
 class multiplayer_menu():
     def __init__(self) -> None:
         self.labels = [
-            Label((960,100),"Multiplayer",font=Game.largeFont)
+            Label((960,100),"Multiplayer",font=Game.largeFont),
+            Label((960,200),"W.I.P",font=Game.largeFont)
 
         ]
         self.buttons = [
@@ -402,7 +405,8 @@ class settings_menu():
     def __init__(self) -> None:
 
         self.labels = [
-            Label((300,100),"Settings",font=Game.largeFont)
+            Label((300,100),"Settings",font=Game.largeFont),
+            Label((300,200),"W.I.P",font=Game.largeFont)
 
         ]
 
@@ -495,7 +499,7 @@ class in_game():                        # I use subclasses to an extreme amount 
 
 
 
-                self.images = getImages("assets/visual/Sprites/player/stream")
+                self.images = getImages("Game/assets/visual/Sprites/player/stream")
                 for image in self.images:
                     surf = self.images[image]
                     surf = pygame.transform.scale_by(surf,0.25)
@@ -559,6 +563,18 @@ class in_game():                        # I use subclasses to an extreme amount 
             if self.rect.bottom >= screen.get_size()[1]:
                 self.rect.bottom = screen.get_size()[1]
 
+        def getImages(folderPath): # this function is from some random guy on stackoverflow, too much effiency for my standards lmao
+            filenames = [f for f in os.listdir(folderPath) if f.endswith('.png')]
+            images = {}
+            for name in filenames:
+                imagename = os.path.splitext(name)[0] 
+                images[imagename] = pygame.image.load(os.path.join(folderPath, name)).convert_alpha()
+
+            return images
+        
+
+
+
     class Enemy():
         def __init__(self) -> None:
             pass
@@ -614,13 +630,15 @@ class in_game():                        # I use subclasses to an extreme amount 
             Game.clock.tick(FPS)
         
 
+
+
 class Game():  # all game constants are stored in this easier than globals class. It allows me to access any of the variables anywhere
                # in the file. Although it may be seen as contemporary, i see it as useful thus why it exists. (I was also running into
                # problems with the main game loop and varibles and such in the root class
     pygame.init()
     pygame.mixer.init()
     pygame.font.init()
-    pygame.mixer.music.load("assets/audio/click-75%.wav")
+    pygame.mixer.music.load("Game/assets/audio/click-75%.wav")
     largeFont = pygame.font.SysFont("courier-new",50)
     mediumFont = pygame.font.SysFont("courier-new",25)
     smallFont = pygame.font.SysFont("courier-new",20,True)
