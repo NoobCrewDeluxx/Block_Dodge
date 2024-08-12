@@ -13,8 +13,6 @@ FRAMECENTRE= 960,540
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 
-
-
 def getImages(folderPath): # this function is from some random guy on stackoverflow, too much effiency for my standards lmao
     filenames = [f for f in os.listdir(folderPath) if f.endswith('.png')]
     images = {}
