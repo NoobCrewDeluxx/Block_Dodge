@@ -2,8 +2,8 @@ import pygame                       # import modules
 from pygame.locals import *
 import time
 import threading
+import multiprocessing
 import os
-
 
 FPS=60                              # game fps
 
@@ -22,7 +22,6 @@ def getImages(folderPath): # this function is from some random guy on stackoverf
 
     return images
 
-
 class Label():   # the Label and Button objects are similar to that of the tkinter Label and
                  # button objects in such a way that they can be used anywhere and with extremely
                  # generalised parameters. This also helps with consistency throughout the game so
@@ -30,7 +29,7 @@ class Label():   # the Label and Button objects are similar to that of the tkint
 
                  # by default the anchor for the label and button is center
 
-    def __init__(self,pos,text,**largs) -> None: 
+    def __init__(self,pos: tuple,text: str,**largs) -> None: 
             
         self.text = largs.get("font",Game.mediumFont).render(text,True,(255,255,255)) # defaults to medium font
         self.text_rect = self.text.get_rect()
@@ -39,12 +38,9 @@ class Label():   # the Label and Button objects are similar to that of the tkint
     def render(self):                              
         Game.screen.blit(self.text,self.text_rect)
 
-
-
-
 class Button():
     
-    def __init__(self,pos,text,**bargs) -> None:
+    def __init__(self,pos: tuple,text: str,**bargs) -> None:
         
 
         self.anchor = bargs.get("anchor","center")              # Default Anchor = Center
@@ -177,13 +173,7 @@ class Button():
                 if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
                     if game.singleplayerMenu.flipCard:
                         game.singleplayerMenu.flipCard =False
-                    else: game.singleplayerMenu.flipCard = True
-
-
-
-
-
-
+                    else: game.singleplayerMenu.flipCard = True         
 
 class main_menu():  # menu class type objects: they are the defining parts of the game that allow me to easily organise 
                     # different menus and objects. Generally speaking they are self-sufficient meaning they define and manage 
@@ -210,6 +200,7 @@ class main_menu():  # menu class type objects: they are the defining parts of th
         for button in self.buttons:
             button.render()
             button.run(game,events)
+
 class Slider: # Slider, W.I.P similar to the Button and Labels in that they can be used anywhere with general parameters
               # iirc there is a similar class type object in tkinter. The majority of the code in __init__ was made by a
               # guy who did a tutorial on yt
@@ -253,7 +244,6 @@ class Slider: # Slider, W.I.P similar to the Button and Labels in that they can 
         button_val  = self.button_rect.centerx - self.slider_left_pos 
 
         return (button_val/val_range)*(self.max-self.min)+self.min
-
 
 class singleplayer_menu():
     class mapCard():               # Sub Class use: I use sub classes to organise code even further than before. i.e mapCard isn't used
@@ -377,7 +367,6 @@ class singleplayer_menu():
         for label in self.labels:
             label.render()
 
-
 class multiplayer_menu():
     def __init__(self) -> None:
         self.labels = [
@@ -397,7 +386,6 @@ class multiplayer_menu():
         for button in self.buttons:
             button.run(game,events)
             button.render()
-
 
 class settings_menu():
     def __init__(self) -> None:
@@ -438,7 +426,6 @@ class settings_menu():
             button.run(game, events)
             button.render()
             
-
 class credits_menu():
     def __init__(self) -> None:
         self.labels = [
@@ -464,8 +451,7 @@ class credits_menu():
 class in_game():                        # I use subclasses to an extreme amount here, probably unnecessary, however I can define variables
                                         # for different movement methods without having to place large ugly if statements everywhere
                                         # the variable set for each movement method is also resuable.
-
-    class Player(pygame.sprite.Sprite):
+    class Player():
 
         class Human(pygame.sprite.Sprite):
             def __init__(self) -> None:
@@ -495,8 +481,6 @@ class in_game():                        # I use subclasses to an extreme amount 
                 self.energy_per_shield_medium_hit = 10 # MegaWatts of power
                 self.fuelUsage = 0.01 # L per second
 
-
-
                 self.images = getImages("Game/assets/visual/Sprites/player/stream")
                 for image in self.images:
                     surf = self.images[image]
@@ -512,45 +496,42 @@ class in_game():                        # I use subclasses to an extreme amount 
             if map == "Nova":
                 self.Ship.__init__(self)
 
-            self.gameoverText = Game.largeFont.render("Game Over", True, (255,255,255))
-            self.gameoverText_rect = self.gameoverText.get_rect(center=(960,540))
+            self.direction = None
 
         def run(self, game, screen, events) -> None:
             pressed_keys = pygame.key.get_pressed()
             
-            frame = 'ship_thrust_off'
-            frameSpeed = 'slow' # default ship speed
-            shipSpeed = self.speed
-            fuelUsage = self.fuelUsage
+            self.frame = 'ship_thrust_off'
+            self.frameSpeed = 'slow' # default ship speed
+            shipSpeed = self.speed # ship movement in pixels per tick
+            fuelUsage = self.fuelUsage # fuel used per tick
+            self.direction = None # movement direction
             
-            if pressed_keys[K_SPACE]:
-                frameSpeed = 'fast'
+            if pressed_keys[K_LSHIFT]:
+                self.frameSpeed = 'fast'
                 shipSpeed = self.speed+self.boostSpeed
                 fuelUsage = self.fuelUsage * 5
 
-            if self.fuel > 0:
-                if pressed_keys[K_RIGHT]:
-                    frame = f'ship_thrust_{frameSpeed}_forward'
+            if pressed_keys[K_d]:
+                    self.direction = "forward"
+                    self.frame = f'ship_thrust_{self.frameSpeed}_forward'
                     game.ingame.distanceTravelled += shipSpeed/10
                     self.fuel -= fuelUsage
 
-                if pressed_keys[K_UP]:
+            if pressed_keys[K_w]:
+                    self.direction = None
                     self.rect.move_ip(0, -shipSpeed)
-                    frame = f'ship_thrust_{frameSpeed}_right'
+                    self.frame = f'ship_thrust_{self.frameSpeed}_right'
                     self.fuel -= fuelUsage
 
-                if pressed_keys[K_DOWN]:
+            if pressed_keys[K_s]:
+                    self.direction = None
                     self.rect.move_ip(0, shipSpeed)
-                    frame = f'ship_thrust_{frameSpeed}_left'
+                    self.frame = f'ship_thrust_{self.frameSpeed}_left'
                     self.fuel -= fuelUsage
 
-                self.fuel -= self.fuelUsage/10
-                game.ingame.distanceTravelled += shipSpeed/100
-
-            else: 
-                screen.blit(self.gameoverText,self.gameoverText_rect)
-
-            screen.blit(self.images[f'{frame}'],self.rect)
+            self.fuel -= self.fuelUsage/10
+            game.ingame.distanceTravelled += shipSpeed/100
 
             if self.rect.left < 0:
                 self.rect.left = 0
@@ -561,22 +542,9 @@ class in_game():                        # I use subclasses to an extreme amount 
             if self.rect.bottom >= screen.get_size()[1]:
                 self.rect.bottom = screen.get_size()[1]
 
-        def getImages(folderPath): # this function is from some random guy on stackoverflow, too much effiency for my standards lmao
-            filenames = [f for f in os.listdir(folderPath) if f.endswith('.png')]
-            images = {}
-            for name in filenames:
-                imagename = os.path.splitext(name)[0] 
-                images[imagename] = pygame.image.load(os.path.join(folderPath, name)).convert_alpha()
-
-            return images
-        
-
-
-
     class Enemy():
         def __init__(self) -> None:
             pass
-
 
     def __init__(self,game, selectedMap: str) -> None:
         self.player = self.Player(game,selectedMap)
@@ -584,58 +552,151 @@ class in_game():                        # I use subclasses to an extreme amount 
         self.distanceTravelled = 0
         self.fuelUsed = round(self.player.fuel,2)
         self.selectedMap = selectedMap
-        self.running = True
         self.game = game
+        self.running = True
+        self.showVars = False
+        self.paused = False
+        self.game_over = False
+        self.game_win = False
+        self.t1 = 0
+        self.t2 = 0
+        self.tt = 0
+        self.fpsAVGlist = []
+        self.fpsAVG = 0
 
-        self.background=pygame.image.load(f"Game/assets/visual/IngameBackgrounds/Pixelated/{selectedMap}.png")
+        self.background=pygame.image.load(f"Game/assets/visual/IngameBackgrounds/Pixelated/Nova_+GLACIO.png")
         self.background.set_alpha(100)
-        self.Labels = [
-            Label((1900,1060),f"Distance: {self.distanceTravelled}"),
-            Label((20,20),f"Fuel: {self.fuelUsed} %")
-
-
-        ]
+        self.bg_scroll = 0
+        
+        self.gameoverText = Game.largeFont.render("Game Over", True, (255,255,255))
+        self.gameoverText_rect = self.gameoverText.get_rect(center=(960,540))
 
     def run(self):
         while self.running: # additionally to having a surplus of subclasses in_game() runs its own game loop that allows for better
                             # performance when playing in game, this is because the game does not have to run through additional
                             # irelavent objects and if statements before it reasches the ingame.run() statement
+            self.t1 = time.time_ns()
             events = pygame.event.get()
             for event in events:
-                if event.type == KEYDOWN and event.key == K_ESCAPE or event.type== QUIT:
+                if event.type== QUIT:
                     self.running=False
                     exit()
 
+                if event.type == KEYDOWN:
+                    if event.key == K_F2:
+                        breakpoint()
+
+                    if event.key == K_F1:
+                        if self.showVars:
+                            self.showVars = False
+                        else: self.showVars = True
+
+                    if event.key == K_ESCAPE or event.key == K_p:
+                        if self.paused:
+                            self.paused = False
+                        else: self.paused = True
+
+                    if event.key == K_F3:
+                        self.running = False
+                        game.running = True
+                
             self.screen.fill((0,0,0))
-            self.screen.blit(self.background,(0,0))
+            self.screen.blit(self.background,(self.bg_scroll,0))
+            if not self.paused and not self.game_over:
 
+                if self.player.fuel > 0 and self.bg_scroll >= -2416:
+                    if self.player.direction == None:
+                        self.bg_scroll-=0.25
+                    elif self.player.direction == "forward" and self.player.frameSpeed == "fast": # test for boost first as it will never get tested for if player is already moving forward
+                        self.bg_scroll -= 1
+                    elif self.player.direction == "forward" :
+                        self.bg_scroll -= 0.5
+
+                if self.bg_scroll <= -2416:
+                    self.game_win = True
+
+                if self.player.fuel <= 0 and not self.game_win:
+                    self.game_over = True
             
+                self.player.run(self.game,self.screen,events)
 
-            self.player.run(self.game,self.screen,events)
+                self.distanceTravelled=round(self.distanceTravelled,1)
+                self.fuelUsed = round(self.player.fuel,2)
 
-            self.distanceTravelled=round(self.distanceTravelled,1)
-            self.fuelUsed = round(self.player.fuel,2)
+                dTSurf = Game.mediumFont.render(f"Distance: {self.distanceTravelled} Km", True, (255,255,255))
+                dTSurf_rect = dTSurf.get_rect()
+                dTSurf_rect.topright = (1900,20)
 
-            self.Labels
+                fuelSurf = Game.mediumFont.render(f"Fuel: {self.fuelUsed} %", True, (255,255,255))
+                fuelSurf_rect = fuelSurf.get_rect()
+                fuelSurf_rect.topleft = (20,20)
 
-            dTSurf = Game.mediumFont.render(f"Distance: {self.distanceTravelled} Km", True, (255,255,255))
-            dTSurf_rect = dTSurf.get_rect()
-            dTSurf_rect.topright = (1900,20)
-
-            fuelSurf = Game.mediumFont.render(f"Fuel: {self.fuelUsed} %", True, (255,255,255))
-            fuelSurf_rect = fuelSurf.get_rect()
-            fuelSurf_rect.topleft = (20,20)
-
+            self.screen.blit(self.player.images[f'{self.player.frame}'],self.player.rect)
             self.screen.blit(dTSurf,dTSurf_rect)
             self.screen.blit(fuelSurf,fuelSurf_rect)
 
+            if self.player.fuel <= 0:
+                self.screen.blit(self.gameoverText,self.gameoverText_rect)
+                self.player.fuel = 0
 
+            if self.showVars: # So I can view variables in runtime rather than relying on pdb breakpoints
+                developer_overlay = [[],[],[]] # list stores text renders in different categories
+
+                if len(self.fpsAVGlist) < 61: # average fps calculations and logic
+                    self.fpsAVGlist.append(round(1/(self.tt/1000)))
+                else: 
+                    for i in self.fpsAVGlist:
+                        self.fpsAVG += i
+                    self.fpsAVG /= len(self.fpsAVGlist)
+                    self.fpsAVG =round(self.fpsAVG)
+                    self.fpsAVGlist = []
+                
+                y=1060
+                x=0
+                variables = [ # variables that are displayed when F1 is pressed
+                        {
+                            "running":f"{self.running} (should not say False!)",
+                            "paused":self.paused,
+                            "show_variables":self.showVars,
+                            "game_over":self.game_over,
+                            "game_win":self.game_win,
+                            "Flags":"",
+                        },
+                        {
+                            "player_pos":self.player.rect.center,
+                            "background_scroll":self.bg_scroll,
+                            "fuel_used":self.fuelUsed,
+                            "distance_travelled":self.distanceTravelled,
+                            "tick_speed_ms":self.tt,
+                            "ticks_per_second": round(1/(self.tt/1000)),
+                            "Avg_ticks_per_second":self.fpsAVG,
+                            "Variables":""
+                        },
+                        {
+                            "selected_map":self.selectedMap,
+                            "screen": self.screen.__str__(),
+                            "player": self.player.__str__(),
+                            "background": self.background.__str__(),
+                            "Objects":""
+                        }
+                ]
+
+                # soem very BASIC dictionary algebra or smth (took me like 20 minutes to do)
+                for n,i in enumerate(variables):
+                    for i_ in i:
+                        developer_overlay[n].append(Game.smallFont.render(f"{i_}: {i.get(i_)}",False,(255,255,255)))
+                    
+                for a in developer_overlay:
+                    for a_ in a:
+                        self.screen.blit(a_,(x,y))
+                        y-=20
+                    x+= 500
+                    y=1060
 
             pygame.display.flip()
             Game.clock.tick(FPS)
-        
-
-
+            self.t2 = time.time_ns()
+            self.tt = (self.t2-self.t1)/1000000
 
 class Game():  # all game constants are stored in this easier than globals class. It allows me to access any of the variables anywhere
                # in the file. Although it may be seen as contemporary, i see it as useful thus why it exists. (I was also running into
@@ -662,7 +723,6 @@ class Game():  # all game constants are stored in this easier than globals class
         self.multiplayerMenu = multiplayer_menu()
         self.ingame_running = False
         self.selectedMap = None
-
 
     def run(self):
         while self.running:
