@@ -578,7 +578,7 @@ class in_game():                        # I use subclasses to an extreme amount 
             pass
 
 
-    def __init__(self,game, selectedMap) -> None:
+    def __init__(self,game, selectedMap: str) -> None:
         self.player = self.Player(game,selectedMap)
         self.screen = Game.screen
         self.distanceTravelled = 0
@@ -587,6 +587,8 @@ class in_game():                        # I use subclasses to an extreme amount 
         self.running = True
         self.game = game
 
+        self.background=pygame.image.load(f"Game/assets/visual/IngameBackgrounds/Pixelated/{selectedMap}.png")
+        self.background.set_alpha(100)
         self.Labels = [
             Label((1900,1060),f"Distance: {self.distanceTravelled}"),
             Label((20,20),f"Fuel: {self.fuelUsed} %")
@@ -605,6 +607,9 @@ class in_game():                        # I use subclasses to an extreme amount 
                     exit()
 
             self.screen.fill((0,0,0))
+            self.screen.blit(self.background,(0,0))
+
+            
 
             self.player.run(self.game,self.screen,events)
 
@@ -623,6 +628,8 @@ class in_game():                        # I use subclasses to an extreme amount 
 
             self.screen.blit(dTSurf,dTSurf_rect)
             self.screen.blit(fuelSurf,fuelSurf_rect)
+
+
 
             pygame.display.flip()
             Game.clock.tick(FPS)
