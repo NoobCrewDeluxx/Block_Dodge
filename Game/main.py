@@ -4,6 +4,7 @@ import time
 import threading
 import multiprocessing
 import os
+import psutil
 
 FPS=60                              # game fps
 
@@ -387,7 +388,7 @@ class multiplayer_menu():
             button.run(game,events)
             button.render()
 
-class settings_menu():
+class settings_menu():  
     def __init__(self) -> None:
 
         self.labels = [
@@ -583,20 +584,23 @@ class in_game():                        # I use subclasses to an extreme amount 
                     exit()
 
                 if event.type == KEYDOWN:
-                    if event.key == K_F2:
+                    if event.key == K_5:
+                        self.running = False
+                        exit()
+                    if event.key == K_4:
                         breakpoint()
 
-                    if event.key == K_F1:
+                    if event.key == K_1:
                         if self.showVars:
                             self.showVars = False
                         else: self.showVars = True
 
-                    if event.key == K_ESCAPE or event.key == K_p:
+                    if event.key == K_ESCAPE or event.key == K_p or event.key== K_2:
                         if self.paused:
                             self.paused = False
                         else: self.paused = True
 
-                    if event.key == K_F3:
+                    if event.key == K_3:
                         self.running = False
                         game.running = True
                 
@@ -650,6 +654,8 @@ class in_game():                        # I use subclasses to an extreme amount 
                     self.fpsAVG /= len(self.fpsAVGlist)
                     self.fpsAVG =round(self.fpsAVG)
                     self.fpsAVGlist = []
+
+                
                 
                 y=1060
                 x=0
@@ -660,7 +666,7 @@ class in_game():                        # I use subclasses to an extreme amount 
                             "show_variables":self.showVars,
                             "game_over":self.game_over,
                             "game_win":self.game_win,
-                            "Flags":"",
+                            "Flags":""
                         },
                         {
                             "player_pos":self.player.rect.center,
@@ -670,6 +676,8 @@ class in_game():                        # I use subclasses to an extreme amount 
                             "tick_speed_ms":self.tt,
                             "ticks_per_second": round(1/(self.tt/1000)),
                             "Avg_ticks_per_second":self.fpsAVG,
+                            "CPU":psutil.cpu_percent(),
+                            "Memory":round(psutil.Process().memory_info().vms)/1000000,
                             "Variables":""
                         },
                         {
@@ -677,6 +685,8 @@ class in_game():                        # I use subclasses to an extreme amount 
                             "screen": self.screen.__str__(),
                             "player": self.player.__str__(),
                             "background": self.background.__str__(),
+                            "fuelSurf": fuelSurf.__str__(),
+                            "dTSurf":dTSurf.__str__(),
                             "Objects":""
                         }
                 ]
@@ -685,12 +695,11 @@ class in_game():                        # I use subclasses to an extreme amount 
                 for n,i in enumerate(variables):
                     for i_ in i:
                         developer_overlay[n].append(Game.smallFont.render(f"{i_}: {i.get(i_)}",False,(255,255,255)))
-                    
                 for a in developer_overlay:
                     for a_ in a:
                         self.screen.blit(a_,(x,y))
                         y-=20
-                    x+= 500
+                    x+= 500                 
                     y=1060
 
             pygame.display.flip()
