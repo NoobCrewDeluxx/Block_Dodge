@@ -5,6 +5,7 @@ import threading
 import multiprocessing
 import os
 import psutil
+import random
 
 FPS=60                              # game fps
 
@@ -373,13 +374,10 @@ class multiplayer_menu():
         self.labels = [
             Label((960,100),"Multiplayer",font=Game.largeFont),
             Label((960,200),"W.I.P",font=Game.largeFont)
-
         ]
         self.buttons = [
             Button((100,980),"Return")
-
         ]
-    
     def run(self,game,events):
         for label in self.labels:
             label.render()
@@ -393,22 +391,23 @@ class settings_menu():
 
         self.labels = [
             Label((300,100),"Settings",font=Game.largeFont),
-            Label((300,200),"W.I.P",font=Game.largeFont)
-
+            Label((300,200),"W.I.P",font=Game.largeFont),
+            Label((300,300),"In Game Controls:",font=Game.mediumFont),
+            Label((300,350),"Movement: 'W A S D'",font=Game.mediumFont),
+            Label((300,400),"Boost: Left Shift",font=Game.mediumFont),
+            Label((300,450),"variables:'1'",font=Game.mediumFont),
+            Label((300,500),"Pause: esc or '2' or 'p'",font=Game.mediumFont),
+            Label((300,550),"Show hitboxes: '3'",font=Game.mediumFont),
+            Label((300,600),"Slow tps: '4'",font=Game.mediumFont),
+            Label((300,650),"return from in game: '7'",font=Game.mediumFont),
+            Label((300,700),"pdb breakpoint: '8'",font=Game.mediumFont),
+            Label((300,750),"exit runtime: '9'",font=Game.mediumFont),
         ]
-
         self.sliders = [
-            Slider(pos=(960,500),size=(400,10),button_width=10,initial_val=0.5,min=0,max=100),
-            Slider(pos=(960,600),size=(200,50),button_width=10,initial_val=0.5,min=0,max=100),
-            Slider(pos=(960,700),size=(100,30),button_width=10,initial_val=0.5,min=0,max=100),
-            Slider(pos=(960,800),size=(700,50),button_width=10,initial_val=0.5,min=0,max=100)
-
-
-            ]
-        
+            Slider(pos=(1160,500),size=(200,10),button_width=10,initial_val=0.5,min=0,max=100),
+            ]  
         self.buttons = [
             Button((100,980),"Return")
-
         ]
     def run(self,game,events):
         for label in self.labels:
@@ -418,10 +417,8 @@ class settings_menu():
         for slider in self.sliders:
             slider.render(Game.screen)
             if pygame.mouse.get_pressed()[0] and slider.container_rect.collidepoint(mouse_pos):
-                slider.move_slider(mouse_pos)
-                
+                slider.move_slider(mouse_pos)      
                 print(round(slider.get_value()))
-
 
         for button in self.buttons:
             button.run(game, events)
@@ -454,11 +451,11 @@ class in_game():                        # I use subclasses to an extreme amount 
                                         # the variable set for each movement method is also resuable.
     class Player():
 
-        class Human(pygame.sprite.Sprite):
+        class Human():
             def __init__(self) -> None:
-                pass
+                pygame.sprite.Sprite.__init__(self)
 
-        class Rover(pygame.sprite.Sprite):
+        class Rover():
             speed = 10 # pixels per tick
             boostSpeed = 10 #pixels per tick boost
             health = 100 # hitpoints before death
@@ -466,10 +463,11 @@ class in_game():                        # I use subclasses to an extreme amount 
             armor = 50 # Armorpoints
 
             def __init__(self) -> None:
-                pass
+                pygame.sprite.Sprite.__init__(self)
 
-        class Ship(pygame.sprite.Sprite):
+        class Ship():
             def __init__(self) -> None:
+                pygame.sprite.Sprite.__init__(self)
 
                 # base attributes:
                 self.speed = 10 # pixels per tick
@@ -482,14 +480,14 @@ class in_game():                        # I use subclasses to an extreme amount 
                 self.energy_per_shield_medium_hit = 10 # MegaWatts of power
                 self.fuelUsage = 0.01 # L per second
 
-                self.images = getImages("Game/assets/visual/Sprites/player/stream")
+                self.images = getImages("Game/assets/visual/Sprites/player/stream") # load all frames for the ship into ram so that they are ready for use and can be switched fast and easy
                 for image in self.images:
                     surf = self.images[image]
                     surf = pygame.transform.scale_by(surf,0.25)
                     surf = pygame.transform.rotate(surf,-90)
                     surf_size = surf.get_size()
-
                     self.images[image] = surf
+
                 self.rect = pygame.Rect(300,Game.screen.get_size()[1]/2,surf_size[0],surf_size[1])
             
         def __init__(self, game, map) -> None:
@@ -498,6 +496,8 @@ class in_game():                        # I use subclasses to an extreme amount 
                 self.Ship.__init__(self)
 
             self.direction = None
+            self.invul_time = 3
+            self.hitbox = [self.rect.topleft,self.rect.bottomleft,self.rect.bottomright,self.rect.topright]
 
         def run(self, game, screen, events) -> None:
             pressed_keys = pygame.key.get_pressed()
@@ -531,8 +531,11 @@ class in_game():                        # I use subclasses to an extreme amount 
                     self.frame = f'ship_thrust_{self.frameSpeed}_left'
                     self.fuel -= fuelUsage
 
+            self.hitbox = [self.rect.topleft,self.rect.bottomleft,self.rect.bottomright,self.rect.topright]
             self.fuel -= self.fuelUsage/10
             game.ingame.distanceTravelled += shipSpeed/100
+
+            
 
             if self.rect.left < 0:
                 self.rect.left = 0
@@ -543,9 +546,63 @@ class in_game():                        # I use subclasses to an extreme amount 
             if self.rect.bottom >= screen.get_size()[1]:
                 self.rect.bottom = screen.get_size()[1]
 
-    class Enemy():
-        def __init__(self) -> None:
-            pass
+    class Enemy(): # for now only asteroid variants are included
+
+        class Small_Asteroid():
+            def __init__(self,y_position):
+                pygame.sprite.Sprite.__init__(self)
+                self.damage = 1
+                self.speed = 20
+                self.surf = pygame.image.load("Game/assets/visual/Sprites/Enemey/Asteroid1.png")
+                self.surf = pygame.transform.scale_by(self.surf,0.2)
+                self.rect = self.surf.get_rect(center=(Game.screen.get_size()[0]+(self.surf.get_size()[0]/2),y_position))
+                print(f"new small asteroid spawned with size:{self.surf.get_size()} and at position: {self.rect.center}")
+                
+        class Medium_Asteroid():
+            def __init__(self, y_position):
+                pygame.sprite.Sprite.__init__(self)
+                self.damage = 5
+                self.speed = 15
+                self.surf = pygame.image.load("Game/assets/visual/Sprites/Enemey/Asteroid1.png")
+                self.surf = pygame.transform.scale_by(self.surf,0.4)
+                self.rect = self.surf.get_rect(center=(Game.screen.get_size()[0]+(self.surf.get_size()[0]/2),y_position))
+                print(f"new medium asteroid spawned with size:{self.surf.get_size()} and at position: {self.rect.center}")
+                
+        class Large_Asteroid():
+            def __init__(self, y_position):
+                pygame.sprite.Sprite.__init__(self)
+                self.damage = 10
+                self.speed = 10
+                self.surf = pygame.image.load("Game/assets/visual/Sprites/Enemey/Asteroid1.png")
+                self.surf = pygame.transform.scale_by(self.surf,0.6)
+                self.rect = self.surf.get_rect(center=(Game.screen.get_size()[0]+(self.surf.get_size()[0]/2),y_position))
+                print(f"new large asteroid spawned with size:{self.surf.get_size()} and at position: {self.rect.center}")
+                
+
+        
+        def __init__(self, size, y_position) -> None:
+            self.player_hit = False
+            self.time_of_hp_loss = time.time() # by setting it to time.time here we are effectively giving the player spawn protection
+            if size == "small_ast":
+                self.Small_Asteroid.__init__(self, y_position)
+            elif size == "medium_ast":
+                self.Medium_Asteroid.__init__(self, y_position)
+            elif size == "large_ast":
+                self.Large_Asteroid.__init__(self, y_position)
+
+            self.hitbox = [self.rect.topleft,self.rect.bottomleft,self.rect.bottomright,self.rect.topright]
+        
+        def run(self, player):
+            for i in range(5):
+                self.rect.move_ip(int((-self.speed/10)),random.randint(-1,1))
+                
+                # if the time of comparison is 3 seconds in the future from the time of hp loss than the statement passes as true and means the player shall no longer be invulnerable
+                # since the player is not in collision with an enemy rect for more than 3 seconds, it is impossible to be hit twice by the same. By introducing the time module into this
+                # I give myself the ability to change this in the future if I want to
+                if player.rect.colliderect(self.rect) and time.time() >= self.time_of_hp_loss+player.invul_time: 
+                    player.health -= self.damage
+                    self.time_of_hp_loss = time.time()
+            self.hitbox = [self.rect.topleft,self.rect.bottomleft,self.rect.bottomright,self.rect.topright]
 
     def __init__(self,game, selectedMap: str) -> None:
         self.player = self.Player(game,selectedMap)
@@ -564,6 +621,9 @@ class in_game():                        # I use subclasses to an extreme amount 
         self.tt = 0
         self.fpsAVGlist = []
         self.fpsAVG = 0
+        self.spawn_size = 0
+        self.show_rect_outlines= False
+        self.slow_tps = False
 
         self.background=pygame.image.load(f"Game/assets/visual/IngameBackgrounds/Pixelated/Nova_+GLACIO.png")
         self.background.set_alpha(100)
@@ -572,23 +632,23 @@ class in_game():                        # I use subclasses to an extreme amount 
         self.gameoverText = Game.largeFont.render("Game Over", True, (255,255,255))
         self.gameoverText_rect = self.gameoverText.get_rect(center=(960,540))
 
+        if selectedMap == "nova":
+            self.enemy_cap = 10
+
+        self.alive_enemies = []
+
     def run(self):
         while self.running: # additionally to having a surplus of subclasses in_game() runs its own game loop that allows for better
                             # performance when playing in game, this is because the game does not have to run through additional
                             # irelavent objects and if statements before it reasches the ingame.run() statement
             self.t1 = time.time_ns()
             events = pygame.event.get()
-            for event in events:
+            for event in events: # event handler for in game controls
                 if event.type== QUIT:
                     self.running=False
                     exit()
 
                 if event.type == KEYDOWN:
-                    if event.key == K_5:
-                        self.running = False
-                        exit()
-                    if event.key == K_4:
-                        breakpoint()
 
                     if event.key == K_1:
                         if self.showVars:
@@ -601,12 +661,31 @@ class in_game():                        # I use subclasses to an extreme amount 
                         else: self.paused = True
 
                     if event.key == K_3:
+                        if self.show_rect_outlines:
+                            self.show_rect_outlines = False
+                        else: self.show_rect_outlines = True
+
+                    if event.key == K_4:
+                        if self.slow_tps:
+                            self.slow_tps = False
+                        else: self.slow_tps = True
+
+                    if event.key == K_7:
                         self.running = False
                         game.running = True
+
+                    if event.key == K_8:
+                        breakpoint()
+
+                    if event.key == K_9:
+                        self.running = False
+                        exit()
+
                 
-            self.screen.fill((0,0,0))
-            self.screen.blit(self.background,(self.bg_scroll,0))
-            if not self.paused and not self.game_over:
+            self.screen.fill((0,0,0)) # refresh the screen 
+            self.screen.blit(self.background,(self.bg_scroll,0)) # blit the background
+
+            if not self.paused and not self.game_over: # game updates running while game unpaused
 
                 if self.player.fuel > 0 and self.bg_scroll >= -2416:
                     if self.player.direction == None:
@@ -619,29 +698,67 @@ class in_game():                        # I use subclasses to an extreme amount 
                 if self.bg_scroll <= -2416:
                     self.game_win = True
 
-                if self.player.fuel <= 0 and not self.game_win:
+                if (self.player.health <= 0 or self.player.fuel <= 0) and not self.game_win:
                     self.game_over = True
             
                 self.player.run(self.game,self.screen,events)
 
+                
+                for i in range(1,2): # spawn chance, the higher the number in the for loop the lower the tps but the more likely a spawn occurs
+                    if i == random.randint(1,50): # thus we raise this number to decrease spawn rate
+                        if len(self.alive_enemies) < 10:
+                            self.spawn_size = random.randint(1,10)
+                            y_spawn = random.randint(0,Game.screen.get_size()[1])
+                            if self.spawn_size >= 1 and self.spawn_size <= 6:
+                                self.alive_enemies.append(self.Enemy("small_ast", y_spawn))
+                            elif self.spawn_size >=7 and self.spawn_size <= 9:
+                                self.alive_enemies.append(self.Enemy("medium_ast", y_spawn))
+                            elif self.spawn_size == 10:
+                                self.alive_enemies.append(self.Enemy("large_ast", y_spawn))
+
+                for i in self.alive_enemies:
+                    i.run(self.player)
+                    if i.rect.right<0:
+                        self.alive_enemies.remove(i)
+
                 self.distanceTravelled=round(self.distanceTravelled,1)
                 self.fuelUsed = round(self.player.fuel,2)
 
-                dTSurf = Game.mediumFont.render(f"Distance: {self.distanceTravelled} Km", True, (255,255,255))
+                
+
+                dTSurf = Game.mediumFont.render(f"Distance: {self.distanceTravelled} Km", False, (255,255,255))
                 dTSurf_rect = dTSurf.get_rect()
                 dTSurf_rect.topright = (1900,20)
 
-                fuelSurf = Game.mediumFont.render(f"Fuel: {self.fuelUsed} %", True, (255,255,255))
+                fuelSurf = Game.mediumFont.render(f"Fuel: {self.fuelUsed} %", False, (255,255,255))
                 fuelSurf_rect = fuelSurf.get_rect()
-                fuelSurf_rect.topleft = (20,20)
+                fuelSurf_rect.topleft = (20,80)
 
-            self.screen.blit(self.player.images[f'{self.player.frame}'],self.player.rect)
-            self.screen.blit(dTSurf,dTSurf_rect)
-            self.screen.blit(fuelSurf,fuelSurf_rect)
+                player_hp = Game.mediumFont.render(f"Health: {self.player.health}", False, (255,255,255))
+                player_hp_rect = player_hp.get_rect()
+                player_hp_rect.topleft = (20,20)
+
+            # rendering happens outside game pause logic, as rendering is purely
+
+            self.screen.blit(self.player.images[f'{self.player.frame}'],self.player.rect) # render player
+
+            for i in self.alive_enemies:            # render enemies
+                self.screen.blit(i.surf,i.rect)
+
+            self.screen.blit(dTSurf,dTSurf_rect) # render Distance Travelled (top right)
+            self.screen.blit(player_hp,player_hp_rect) # render player hp (top left)
+            self.screen.blit(fuelSurf,fuelSurf_rect) # render Fuel Left (top left)
+            
 
             if self.player.fuel <= 0:
                 self.screen.blit(self.gameoverText,self.gameoverText_rect)
                 self.player.fuel = 0
+
+            if self.show_rect_outlines:
+                
+                pygame.draw.lines(surface=self.screen,color=(255,255,255),closed=True,points=self.player.hitbox)
+                for i in self.alive_enemies:
+                    pygame.draw.lines(surface=self.screen,color=(255,255,255),closed=True,points=i.hitbox)
 
             if self.showVars: # So I can view variables in runtime rather than relying on pdb breakpoints
                 developer_overlay = [[],[],[]] # list stores text renders in different categories
@@ -664,15 +781,20 @@ class in_game():                        # I use subclasses to an extreme amount 
                             "running":f"{self.running} (should not say False!)",
                             "paused":self.paused,
                             "show_variables":self.showVars,
+                            "show_hitboxes":self.show_rect_outlines,
+                            "slow_tps":self.slow_tps,
                             "game_over":self.game_over,
                             "game_win":self.game_win,
                             "Flags":""
                         },
                         {
+                            "selected_map":self.selectedMap,
                             "player_pos":self.player.rect.center,
                             "background_scroll":self.bg_scroll,
                             "fuel_used":self.fuelUsed,
                             "distance_travelled":self.distanceTravelled,
+                            "enemies_alive":len(self.alive_enemies),
+                            "spawn_size":self.spawn_size,
                             "tick_speed_ms":self.tt,
                             "ticks_per_second": round(1/(self.tt/1000)),
                             "Avg_ticks_per_second":self.fpsAVG,
@@ -681,26 +803,46 @@ class in_game():                        # I use subclasses to an extreme amount 
                             "Variables":""
                         },
                         {
-                            "selected_map":self.selectedMap,
-                            "screen": self.screen.__str__(),
-                            "player": self.player.__str__(),
-                            "background": self.background.__str__(),
-                            "fuelSurf": fuelSurf.__str__(),
-                            "dTSurf":dTSurf.__str__(),
+                            
+                            "screen": self.screen.__repr__(),
+                            "player": self.player.__repr__(),
+                            "background": self.background.__repr__(),
+                            "fuelSurf": fuelSurf.__repr__(),
+                            "dTSurf":dTSurf.__repr__(),
+                            "enemies_alive":self.alive_enemies,
                             "Objects":""
                         }
                 ]
 
-                # soem very BASIC dictionary algebra or smth (took me like 20 minutes to do)
-                for n,i in enumerate(variables):
-                    for i_ in i:
-                        developer_overlay[n].append(Game.smallFont.render(f"{i_}: {i.get(i_)}",False,(255,255,255)))
+                # some very BASIC dictionary algebra or smth (took me like 20 minutes to do)
+                # iterates through the varaibles dictionary defined above, and blits rendered texts
+
+                for n,i in enumerate(variables): # i is the nested dictionary, n is the number of iterations through the base dictionary
+
+                    for i_ in i: # i_ are the key | value pairs inside the dictionaries. NOTE: it is important to get the value from the i_ key 
+
+                        if type(i.get(i_)) != type(list()): # looks for any lists
+                            developer_overlay[n].append(Game.smallFont.render(f"{i_}: {i.get(i_)}",False,(255,255,255)))
+                        else:
+                            for n2,i__ in enumerate(i.get(i_)): # i__ is the values inside the list inside the nested dictionaries, n2 is the number of iterations inside said list
+                                developer_overlay[n].append(Game.smallFont.render(f"{n2}: {i__.__repr__()}",False,(255,255,255)))
+
+                            developer_overlay[n].append(Game.smallFont.render(f"{i_}: ",False,(255,255,255)))
+
                 for a in developer_overlay:
                     for a_ in a:
                         self.screen.blit(a_,(x,y))
                         y-=20
                     x+= 500                 
                     y=1060
+
+            if self.slow_tps:
+                global FPS
+                FPS = 2
+            else:
+                FPS = 60
+
+                
 
             pygame.display.flip()
             Game.clock.tick(FPS)
