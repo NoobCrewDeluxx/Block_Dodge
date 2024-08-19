@@ -1,11 +1,6 @@
 import pygame                       # import modules
 from pygame.locals import *
-import time
-import threading
-import multiprocessing
 import os
-import psutil
-import random
 
 FPS=60                              # game fps
 
@@ -15,839 +10,6 @@ FRAMECENTRE= 960,540
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 
-def getImages(folderPath): # this function is from some random guy on stackoverflow, too much effiency for my standards lmao
-    filenames = [f for f in os.listdir(folderPath) if f.endswith('.png')]
-    images = {}
-    for name in filenames:
-        imagename = os.path.splitext(name)[0] 
-        images[imagename] = pygame.image.load(os.path.join(folderPath, name)).convert_alpha()
-
-    return images
-
-class Label():   # the Label and Button objects are similar to that of the tkinter Label and
-                 # button objects in such a way that they can be used anywhere and with extremely
-                 # generalised parameters. This also helps with consistency throughout the game so
-                 # that my buttons don't look like how I was feeling when I coded them that day
-
-                 # by default the anchor for the label and button is center
-
-    def __init__(self,pos: tuple,text: str,**largs) -> None: 
-            
-        self.text = largs.get("font",Game.mediumFont).render(text,True,(255,255,255)) # defaults to medium font
-        self.text_rect = self.text.get_rect()
-        setattr(self.text_rect,largs.get("anchor","center"),pos)
-        
-    def render(self):                              
-        Game.screen.blit(self.text,self.text_rect)
-
-class Button():
-    
-    def __init__(self,pos: tuple,text: str,**bargs) -> None:
-        
-
-        self.anchor = bargs.get("anchor","center")              # Default Anchor = Center
-        self.buttonsize = bargs.get("size",(200,50))            # Default Size = 200 wide ,50 high
-        self.name = bargs.get("name", None)                     # Default Name = None
-        self.alpha = bargs.get("alpha", 255)                    # Default Alpha = 255
-
-        self.surf = pygame.Surface(self.buttonsize)
-        self.surf.fill((5,5,5))
-        self.rect = self.surf.get_rect()
-        setattr(self.rect,self.anchor,pos)
-
-        self.description = text.lower()
-
-        self.text = Game.mediumFont.render(text,True,(255,255,255))
-        self.text_rect = self.text.get_rect()
-        setattr(self.text_rect,self.anchor,pos)
-
-        self.surf.set_alpha(self.alpha)
-
-    def render(self) -> None:
-        Game.screen.blit(self.surf,self.rect)
-        Game.screen.blit(self.text,self.text_rect)
-             
-    def run(self ,game ,events: list) -> None:
-        mousepos = pygame.mouse.get_pos()
-        
-        if not self.rect.collidepoint(mousepos):
-            self.surf.fill((0,0,0))
-
-        for event in events: # the great wall of button events, could be made SO much more efficient
-                             # however, it works how it is and if I touch one thing it just completely breaks everything
-                             # each button identifier has its own set of statements and conditionals so everybutton doesnt
-                             # do the same thing, if I put the mouse hover highlight outside of an Identifier then it would 
-                             # highlight all buttons rather than just the one the user is hovering.
-
-            if self.description == "quit": # Button identifier
-                if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
-                    pygame.mixer.music.play()                               
-                    self.surf.fill((20,20,30))
-                if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
-                    game.running = False
-                if self.rect.collidepoint(mousepos):                                                    # Mouse hover highlight
-                    self.surf.fill((10,10,20))
-        
-            elif self.description == "singleplayer":
-                if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
-                    pygame.mixer.music.play()
-                    self.surf.fill((20,20,30))
-                if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
-                    game.currentMenu = game.menus[1]
-                    self.surf.fill((0,0,0))
-                if self.rect.collidepoint(mousepos):
-                    self.surf.fill((10,10,20))
-
-            elif self.description == "multiplayer":
-                if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
-                    pygame.mixer.music.play()
-                    self.surf.fill((20,20,30))
-                if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
-                    game.currentMenu = game.menus[2]
-                    self.surf.fill((0,0,0))
-                if self.rect.collidepoint(mousepos):
-                    self.surf.fill((10,10,20))
-
-            elif self.description == "settings":
-                if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
-                    pygame.mixer.music.play()
-                    self.surf.fill((20,20,30))
-                if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
-                    game.currentMenu = game.menus[3]
-                    self.surf.fill((0,0,0))
-                if self.rect.collidepoint(mousepos):
-                    self.surf.fill((10,10,20))
-
-            elif self.description == "credits":
-                if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
-                    pygame.mixer.music.play()
-                    self.surf.fill((20,20,30))
-                if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
-                    game.currentMenu = game.menus[4]
-                    self.surf.fill((0,0,0))
-                if self.rect.collidepoint(mousepos):
-                    self.surf.fill((10,10,20))
-
-            elif self.description == "return":
-                if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
-                    pygame.mixer.music.play()
-                    self.surf.fill((20,20,30))
-                if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
-                    game.currentMenu = game.menus[0]
-                    self.surf.fill((0,0,0))
-                if self.rect.collidepoint(mousepos):
-                    self.surf.fill((10,10,20))
-
-            elif self.description =="select" and game.currentMenu == "singleplayer":
-                if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
-                    pygame.mixer.music.play()
-                    self.surf.fill((20,20,30))
-                if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
-                    game.ingame_running = True
-                if self.rect.collidepoint(mousepos):
-                    self.surf.fill((10,10,20))
-
-            elif (self.description =="next" and game.currentMenu == "singleplayer") or self.name == "sPlay_right":
-                if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
-                    pygame.mixer.music.play()
-                    self.surf.fill((20,20,30))
-                if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
-                    game.singleplayerMenu.prevMapCard += 1
-                    game.singleplayerMenu.selMapCard += 1
-                    game.singleplayerMenu.nextMapCard += 1
-                if self.rect.collidepoint(mousepos):
-                    self.surf.fill((10,10,20))
-
-            elif (self.description =="previous" and game.currentMenu == "singleplayer") or self.name == "sPlay_left":
-                if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
-                    pygame.mixer.music.play()
-                    self.surf.fill((20,20,30))
-                if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
-                    game.singleplayerMenu.prevMapCard -= 1
-                    game.singleplayerMenu.selMapCard -= 1
-                    game.singleplayerMenu.nextMapCard -= 1
-                if self.rect.collidepoint(mousepos):
-                    self.surf.fill((10,10,20))
-
-            elif self.name=="sPlay_center":
-                if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
-                    pygame.mixer.music.play()
-                if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
-                    if game.singleplayerMenu.flipCard:
-                        game.singleplayerMenu.flipCard =False
-                    else: game.singleplayerMenu.flipCard = True         
-
-class main_menu():  # menu class type objects: they are the defining parts of the game that allow me to easily organise 
-                    # different menus and objects. Generally speaking they are self-sufficient meaning they define and manage 
-                    # their own variables only needing to be externally ran by the Game() class. An exception to this applies 
-                    # to the in_game() class.
-
-    def __init__(self) -> None:
-        self.labels = [
-            Label((960,240),"Block Dodge",font=Game.largeFont)
-
-        ]
-        self.buttons = [
-            Button((960,400),"Singleplayer"),
-            Button((960,500),"Multiplayer"),
-            Button((960,600),"Settings"),
-            Button((960,700),"Credits"),
-            Button((960,800),"Quit")
-
-        ]
-    def run(self,game,events):
-        for label in self.labels:
-            label.render()
-
-        for button in self.buttons:
-            button.render()
-            button.run(game,events)
-
-class Slider: # Slider, W.I.P similar to the Button and Labels in that they can be used anywhere with general parameters
-              # iirc there is a similar class type object in tkinter. The majority of the code in __init__ was made by a
-              # guy who did a tutorial on yt
-    def __init__(self, pos: tuple, size: tuple, button_width: int, initial_val: float, min: int, max: int) -> None:
-        self.pos = pos
-        self.size = size 
-        self.button_width = button_width
-
-        self.max = max
-        self.min = min
-        
-        self.slider_left_pos = self.pos[0] - (size[0]//2)
-        self.slider_right_pos = self.pos[0] + (size[0]//2)
-        self.slider_top_pos = self.pos[1] - (size[1]//2)
-
-        self.initial_val = (self.slider_right_pos-self.slider_left_pos)*initial_val
-
-        self.clicked = False
-
-        self.container_rect = pygame.Rect(self.slider_left_pos, self.slider_top_pos, self.size[0], self.size[1])
-        self.button_rect = pygame.Rect(self.slider_left_pos+self.initial_val - 5, self.slider_top_pos, self.button_width, self.size[1])
-
-    def move_slider(self,mouse_pos): 
-        # moves slider button rect to mouse x position if mouse button 1 is down in the container rect and checks too see if slider button rect is outside container rect x value. Y value is unaffected
-
-        if self.button_rect.left >= self.container_rect.left and self.button_rect.right <= self.container_rect.right:
-                self.button_rect.centerx = mouse_pos[0]
-
-        if self.button_rect.left < self.container_rect.left:
-            self.button_rect.left = self.container_rect.left
-
-        if self.button_rect.right > self.container_rect.right:
-            self.button_rect.right = self.container_rect.right
-        
-    def render(self, screen):
-        pygame.draw.rect(screen,"darkgray", self.container_rect)
-        pygame.draw.rect(screen,"blue", self.button_rect)
-
-    def get_value(self):
-        val_range = self.slider_right_pos - self.slider_left_pos
-        button_val  = self.button_rect.centerx - self.slider_left_pos 
-
-        return (button_val/val_range)*(self.max-self.min)+self.min
-
-class singleplayer_menu():
-    class mapCard():               # Sub Class use: I use sub classes to organise code even further than before. i.e mapCard isn't used
-                                   # by any other class in the whole file so why put it outside singpleplayer_menu().
-        def __init__(self, map: str) -> None:
-            self.mapName = map
-
-            self.mapImage = pygame.image.load(f"Game/assets/visual/MapCards/Previews/Pixelated/{map}.png")
-            self.mapDesc = pygame.image.load(f"Game/assets/visual/MapCards/Descriptions/{map}.png")
-            self.scaledMapImage = pygame.image.load(f"Game/assets/visual/MapCards/Previews/Pixelated/{map}.png")
-            
-            self.scaledMapImage = pygame.transform.scale_by(self.scaledMapImage,0.75)
-
-            self.scaledMapImage_Rect = self.scaledMapImage.get_rect()
-            self.mapDesc_Rect = self.mapDesc.get_rect()
-            self.mapImage_Rect = self.mapImage.get_rect()
-            
-            
-            self.mapImageBG = pygame.image.load(f"Game/assets/visual/MenuBG/Blur/{map}.png")
-            self.mapImageBG.set_alpha(90)
-            self.mapImage_RectBG = self.mapImageBG.get_rect(center=FRAMECENTRE)
-
-        # different render functions exist in the mapCard object purely to render scaled versions of the large image to different locations. It prevents a large amount of loading that could have been possible
-        # if a different approach was taken. This method loads 18 images, 12 scaled down 0.75x, 6 kept normal resolution. It can be time consuming switching to different methods. If it works it works.
-        
-        def renderBG(self):
-            Game.screen.blit(self.mapImageBG,self.mapImage_RectBG)
-            self.desc = None
-
-        def renderCenter(self):
-            self.mapImage_Rect.center = (960,500)
-            Game.screen.blit(self.mapImage,self.mapImage_Rect)
-            
-        def renderLeft(self):
-            self.scaledMapImage_Rect.center = (660,500)
-            Game.screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
-
-        def renderRight(self):
-            self.scaledMapImage_Rect.center = (1260,500)
-            Game.screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
-
-        def renderDesc(self):
-            self.mapDesc_Rect.center = (960,500)
-            Game.screen.blit(self.mapDesc,self.mapDesc_Rect)
-
-    
-    def __init__(self) -> None:
-        # selectors will define which map 
-        self.prevMapCard = 4
-        self.selMapCard = 0
-        self.nextMapCard = 1
-
-        self.flipCard = False
-
-        self.labels = [
-            Label((960,100),"Select Map",font=Game.largeFont)
-
-        ]
-
-        self.buttons = [
-            Button((1110,900),"Next"),
-            Button((810,900),"Previous"),
-            Button((100,980),"Return"),
-            Button((960,1000),"Select"),
-            Button((660,500),"",name="sPlay_left",size=(300,600),alpha=0),      # a "name" keyword argument was used to prevent text from being displayed, despite the fact mapCards are rendered ontop of the Buttons. 
-            Button((1260,500),"",name="sPlay_right",size=(300,600),alpha=0),    # note the size keyword arguement, which I specifically implemented for this use case. It may be used in the future which is why I fully implemented it
-            Button((960,500),"",name="sPlay_center",size=(300,600),alpha=0),    # also note that I used the **kwargs parameter method so I did not have to have to change the arguments for every Button and Label object.
-        ]
-
-        self.mapCards = [               # list of mapCard objects
-            self.mapCard("Terran"),
-            self.mapCard("Lithos"),
-            self.mapCard("Glacio"),
-            self.mapCard("Solaris"),
-            self.mapCard("Nova")
-        ]
-         
-    def boundaryFix(self,boundLeft: int,number: int, boundRight:int ): 
-        # boundLeft is by default 0 (the start of every list), number is the number being checked, boundRight is the length of the list of which the number is being checked against
-        if number < boundLeft:
-            number = boundRight
-            
-        if number > boundRight:
-            number = boundLeft
-
-        return number
-
-    def run(self,game,events):
-
-        # to prevent list of out of bounds error we check that the selector isn't outside of the length of items inside self.mapCards list, which contains the mapCard objects
-        self.prevMapCard = self.boundaryFix(0, self.prevMapCard, len(self.mapCards)-1)
-        self.selMapCard = self.boundaryFix(0, self.selMapCard, len(self.mapCards)-1)
-        self.nextMapCard = self.boundaryFix(0, self.nextMapCard, len(self.mapCards)-1)
-
-        self.selMapName = str(self.mapCards[self.selMapCard].mapName)
-        
-        
-
-        self.mapCards[self.selMapCard].renderBG()
-        # to prevent abnormal visiuals we want the buttons to be rendered after the background but not before the mapCards
-
-        for button in self.buttons:     
-            button.render()
-
-        self.mapCards[self.prevMapCard].renderLeft()
-        self.mapCards[self.selMapCard].renderCenter()
-        self.mapCards[self.nextMapCard].renderRight()
-
-
-        # renders map description ontop of map preview if the flipCard value is set to true via the button conditional statements
-        if self.flipCard:
-            self.mapCards[self.selMapCard].renderDesc()
-        
-
-
-        # selMapCard, prevMapCard, and nextMapCard updaters must go after this or before boundary fixing to prevent list out of range error
-
-        for button in self.buttons:
-            button.run(game, events)
-
-        for label in self.labels:
-            label.render()
-
-class multiplayer_menu():
-    def __init__(self) -> None:
-        self.labels = [
-            Label((960,100),"Multiplayer",font=Game.largeFont),
-            Label((960,200),"W.I.P",font=Game.largeFont)
-        ]
-        self.buttons = [
-            Button((100,980),"Return")
-        ]
-    def run(self,game,events):
-        for label in self.labels:
-            label.render()
-
-        for button in self.buttons:
-            button.run(game,events)
-            button.render()
-
-class settings_menu():  
-    def __init__(self) -> None:
-
-        self.labels = [
-            Label((300,100),"Settings",font=Game.largeFont),
-            Label((300,200),"W.I.P",font=Game.largeFont),
-            Label((300,300),"In Game Controls:",font=Game.mediumFont),
-            Label((300,350),"Movement: 'W A S D'",font=Game.mediumFont),
-            Label((300,400),"Boost: Left Shift",font=Game.mediumFont),
-            Label((300,450),"variables:'1'",font=Game.mediumFont),
-            Label((300,500),"Pause: esc or '2' or 'p'",font=Game.mediumFont),
-            Label((300,550),"Show hitboxes: '3'",font=Game.mediumFont),
-            Label((300,600),"Slow tps: '4'",font=Game.mediumFont),
-            Label((300,650),"return from in game: '7'",font=Game.mediumFont),
-            Label((300,700),"pdb breakpoint: '8'",font=Game.mediumFont),
-            Label((300,750),"exit runtime: '9'",font=Game.mediumFont),
-        ]
-        self.sliders = [
-            Slider(pos=(1160,500),size=(200,10),button_width=10,initial_val=0.5,min=0,max=100),
-            ]  
-        self.buttons = [
-            Button((100,980),"Return")
-        ]
-    def run(self,game,events):
-        for label in self.labels:
-            label.render()
-        
-        mouse_pos = pygame.mouse.get_pos()
-        for slider in self.sliders:
-            slider.render(Game.screen)
-            if pygame.mouse.get_pressed()[0] and slider.container_rect.collidepoint(mouse_pos):
-                slider.move_slider(mouse_pos)      
-                print(round(slider.get_value()))
-
-        for button in self.buttons:
-            button.run(game, events)
-            button.render()
-            
-class credits_menu():
-    def __init__(self) -> None:
-        self.labels = [
-            Label((960,240),"Credits",font=Game.largeFont),
-            Label((960,400),"Lead Development: Joseph Wilson",font=Game.mediumFont),
-            Label((960,500),"Visuals: Joseph Wilson",font=Game.mediumFont),
-            Label((960,600),"Music: RE-Logic",font=Game.mediumFont),
-            Label((960,700),"Programming: Joseph Wilson",font=Game.mediumFont),
-        ]
-
-        self.buttons = [
-            Button((100,980),"Return")
-        ]
-
-    def run(self,game,events):
-        for label in self.labels:
-            label.render()
-
-        for button in self.buttons:
-            button.render()
-            button.run(game, events)
-
-class in_game():                        # I use subclasses to an extreme amount here, probably unnecessary, however I can define variables
-                                        # for different movement methods without having to place large ugly if statements everywhere
-                                        # the variable set for each movement method is also resuable.
-    class Player():
-
-        class Human():
-            def __init__(self) -> None:
-                pygame.sprite.Sprite.__init__(self)
-
-        class Rover():
-            speed = 10 # pixels per tick
-            boostSpeed = 10 #pixels per tick boost
-            health = 100 # hitpoints before death
-            energy = 10 # MegaWatts of power
-            armor = 50 # Armorpoints
-
-            def __init__(self) -> None:
-                pygame.sprite.Sprite.__init__(self)
-
-        class Ship():
-            def __init__(self) -> None:
-                pygame.sprite.Sprite.__init__(self)
-
-                # base attributes:
-                self.speed = 10 # pixels per tick
-                self.boostSpeed = 10 #pixels per tick boost
-                self.health = 100 # hitpoints before death
-                self.fuel = 100 # Liters of fuel
-                self.energy = 100 # MegaWatts of power
-                self.energy_per_shield_weak_hit = 1 # MegaWatts pf power
-                self.energy_per_shield_medium_hit = 5 # MegaWatts of power
-                self.energy_per_shield_medium_hit = 10 # MegaWatts of power
-                self.fuelUsage = 0.01 # L per second
-
-                self.images = getImages("Game/assets/visual/Sprites/player/stream") # load all frames for the ship into ram so that they are ready for use and can be switched fast and easy
-                for image in self.images:
-                    surf = self.images[image]
-                    surf = pygame.transform.scale_by(surf,0.25)
-                    surf = pygame.transform.rotate(surf,-90)
-                    surf_size = surf.get_size()
-                    self.images[image] = surf
-
-                self.rect = pygame.Rect(300,Game.screen.get_size()[1]/2,surf_size[0],surf_size[1])
-            
-        def __init__(self, game, map) -> None:
-            
-            if map == "Nova":
-                self.Ship.__init__(self)
-
-            self.direction = None
-            self.invul_time = 3
-            self.hitbox = [self.rect.topleft,self.rect.bottomleft,self.rect.bottomright,self.rect.topright]
-
-        def run(self, game, screen, events) -> None:
-            pressed_keys = pygame.key.get_pressed()
-            
-            self.frame = 'ship_thrust_off'
-            self.frameSpeed = 'slow' # default ship speed
-            shipSpeed = self.speed # ship movement in pixels per tick
-            fuelUsage = self.fuelUsage # fuel used per tick
-            self.direction = None # movement direction
-            
-            if pressed_keys[K_LSHIFT]:
-                self.frameSpeed = 'fast'
-                shipSpeed = self.speed+self.boostSpeed
-                fuelUsage = self.fuelUsage * 5
-
-            if pressed_keys[K_d]:
-                    self.direction = "forward"
-                    self.frame = f'ship_thrust_{self.frameSpeed}_forward'
-                    game.ingame.distanceTravelled += shipSpeed/10
-                    self.fuel -= fuelUsage
-
-            if pressed_keys[K_w]:
-                    self.direction = None
-                    self.rect.move_ip(0, -shipSpeed)
-                    self.frame = f'ship_thrust_{self.frameSpeed}_right'
-                    self.fuel -= fuelUsage
-
-            if pressed_keys[K_s]:
-                    self.direction = None
-                    self.rect.move_ip(0, shipSpeed)
-                    self.frame = f'ship_thrust_{self.frameSpeed}_left'
-                    self.fuel -= fuelUsage
-
-            self.hitbox = [self.rect.topleft,self.rect.bottomleft,self.rect.bottomright,self.rect.topright]
-            self.fuel -= self.fuelUsage/10
-            game.ingame.distanceTravelled += shipSpeed/100
-
-            
-
-            if self.rect.left < 0:
-                self.rect.left = 0
-            if self.rect.right > screen.get_size()[0]:
-                self.rect.right = screen.get_size()[0]
-            if self.rect.top <= 0:
-                self.rect.top = 0
-            if self.rect.bottom >= screen.get_size()[1]:
-                self.rect.bottom = screen.get_size()[1]
-
-    class Enemy(): # for now only asteroid variants are included
-
-        class Small_Asteroid():
-            def __init__(self,y_position):
-                pygame.sprite.Sprite.__init__(self)
-                self.damage = 1
-                self.speed = 20
-                self.surf = pygame.image.load("Game/assets/visual/Sprites/Enemey/Asteroid1.png")
-                self.surf = pygame.transform.scale_by(self.surf,0.2)
-                self.rect = self.surf.get_rect(center=(Game.screen.get_size()[0]+(self.surf.get_size()[0]/2),y_position))
-                print(f"new small asteroid spawned with size:{self.surf.get_size()} and at position: {self.rect.center}")
-                
-        class Medium_Asteroid():
-            def __init__(self, y_position):
-                pygame.sprite.Sprite.__init__(self)
-                self.damage = 5
-                self.speed = 15
-                self.surf = pygame.image.load("Game/assets/visual/Sprites/Enemey/Asteroid1.png")
-                self.surf = pygame.transform.scale_by(self.surf,0.4)
-                self.rect = self.surf.get_rect(center=(Game.screen.get_size()[0]+(self.surf.get_size()[0]/2),y_position))
-                print(f"new medium asteroid spawned with size:{self.surf.get_size()} and at position: {self.rect.center}")
-                
-        class Large_Asteroid():
-            def __init__(self, y_position):
-                pygame.sprite.Sprite.__init__(self)
-                self.damage = 10
-                self.speed = 10
-                self.surf = pygame.image.load("Game/assets/visual/Sprites/Enemey/Asteroid1.png")
-                self.surf = pygame.transform.scale_by(self.surf,0.6)
-                self.rect = self.surf.get_rect(center=(Game.screen.get_size()[0]+(self.surf.get_size()[0]/2),y_position))
-                print(f"new large asteroid spawned with size:{self.surf.get_size()} and at position: {self.rect.center}")
-                
-
-        
-        def __init__(self, size, y_position) -> None:
-            self.player_hit = False
-            self.time_of_hp_loss = time.time() # by setting it to time.time here we are effectively giving the player spawn protection
-            if size == "small_ast":
-                self.Small_Asteroid.__init__(self, y_position)
-            elif size == "medium_ast":
-                self.Medium_Asteroid.__init__(self, y_position)
-            elif size == "large_ast":
-                self.Large_Asteroid.__init__(self, y_position)
-
-            self.hitbox = [self.rect.topleft,self.rect.bottomleft,self.rect.bottomright,self.rect.topright]
-        
-        def run(self, player):
-            for i in range(5):
-                self.rect.move_ip(int((-self.speed/10)),random.randint(-1,1))
-                
-                # if the time of comparison is 3 seconds in the future from the time of hp loss than the statement passes as true and means the player shall no longer be invulnerable
-                # since the player is not in collision with an enemy rect for more than 3 seconds, it is impossible to be hit twice by the same. By introducing the time module into this
-                # I give myself the ability to change this in the future if I want to
-                if player.rect.colliderect(self.rect) and time.time() >= self.time_of_hp_loss+player.invul_time: 
-                    player.health -= self.damage
-                    self.time_of_hp_loss = time.time()
-            self.hitbox = [self.rect.topleft,self.rect.bottomleft,self.rect.bottomright,self.rect.topright]
-
-    def __init__(self,game, selectedMap: str) -> None:
-        self.player = self.Player(game,selectedMap)
-        self.screen = Game.screen
-        self.distanceTravelled = 0
-        self.fuelUsed = round(self.player.fuel,2)
-        self.selectedMap = selectedMap
-        self.game = game
-        self.running = True
-        self.showVars = False
-        self.paused = False
-        self.game_over = False
-        self.game_win = False
-        self.t1 = 0
-        self.t2 = 0
-        self.tt = 0
-        self.fpsAVGlist = []
-        self.fpsAVG = 0
-        self.spawn_size = 0
-        self.show_rect_outlines= False
-        self.slow_tps = False
-
-        self.background=pygame.image.load(f"Game/assets/visual/IngameBackgrounds/Pixelated/Nova_+GLACIO.png")
-        self.background.set_alpha(100)
-        self.bg_scroll = 0
-        
-        self.gameoverText = Game.largeFont.render("Game Over", True, (255,255,255))
-        self.gameoverText_rect = self.gameoverText.get_rect(center=(960,540))
-
-        if selectedMap == "nova":
-            self.enemy_cap = 10
-
-        self.alive_enemies = []
-
-    def run(self):
-        while self.running: # additionally to having a surplus of subclasses in_game() runs its own game loop that allows for better
-                            # performance when playing in game, this is because the game does not have to run through additional
-                            # irelavent objects and if statements before it reasches the ingame.run() statement
-            self.t1 = time.time_ns()
-            events = pygame.event.get()
-            for event in events: # event handler for in game controls
-                if event.type== QUIT:
-                    self.running=False
-                    exit()
-
-                if event.type == KEYDOWN:
-
-                    if event.key == K_1:
-                        if self.showVars:
-                            self.showVars = False
-                        else: self.showVars = True
-
-                    if event.key == K_ESCAPE or event.key == K_p or event.key== K_2:
-                        if self.paused:
-                            self.paused = False
-                        else: self.paused = True
-
-                    if event.key == K_3:
-                        if self.show_rect_outlines:
-                            self.show_rect_outlines = False
-                        else: self.show_rect_outlines = True
-
-                    if event.key == K_4:
-                        if self.slow_tps:
-                            self.slow_tps = False
-                        else: self.slow_tps = True
-
-                    if event.key == K_7:
-                        self.running = False
-                        game.running = True
-
-                    if event.key == K_8:
-                        breakpoint()
-
-                    if event.key == K_9:
-                        self.running = False
-                        exit()
-
-                
-            self.screen.fill((0,0,0)) # refresh the screen 
-            self.screen.blit(self.background,(self.bg_scroll,0)) # blit the background
-
-            if not self.paused and not self.game_over: # game updates running while game unpaused
-
-                if self.player.fuel > 0 and self.bg_scroll >= -2416:
-                    if self.player.direction == None:
-                        self.bg_scroll-=0.25
-                    elif self.player.direction == "forward" and self.player.frameSpeed == "fast": # test for boost first as it will never get tested for if player is already moving forward
-                        self.bg_scroll -= 1
-                    elif self.player.direction == "forward" :
-                        self.bg_scroll -= 0.5
-
-                if self.bg_scroll <= -2416:
-                    self.game_win = True
-
-                if (self.player.health <= 0 or self.player.fuel <= 0) and not self.game_win:
-                    self.game_over = True
-            
-                self.player.run(self.game,self.screen,events)
-
-                
-                for i in range(1,2): # spawn chance, the higher the number in the for loop the lower the tps but the more likely a spawn occurs
-                    if i == random.randint(1,50): # thus we raise this number to decrease spawn rate
-                        if len(self.alive_enemies) < 10:
-                            self.spawn_size = random.randint(1,10)
-                            y_spawn = random.randint(0,Game.screen.get_size()[1])
-                            if self.spawn_size >= 1 and self.spawn_size <= 6:
-                                self.alive_enemies.append(self.Enemy("small_ast", y_spawn))
-                            elif self.spawn_size >=7 and self.spawn_size <= 9:
-                                self.alive_enemies.append(self.Enemy("medium_ast", y_spawn))
-                            elif self.spawn_size == 10:
-                                self.alive_enemies.append(self.Enemy("large_ast", y_spawn))
-
-                for i in self.alive_enemies:
-                    i.run(self.player)
-                    if i.rect.right<0:
-                        self.alive_enemies.remove(i)
-
-                self.distanceTravelled=round(self.distanceTravelled,1)
-                self.fuelUsed = round(self.player.fuel,2)
-
-                
-
-                dTSurf = Game.mediumFont.render(f"Distance: {self.distanceTravelled} Km", False, (255,255,255))
-                dTSurf_rect = dTSurf.get_rect()
-                dTSurf_rect.topright = (1900,20)
-
-                fuelSurf = Game.mediumFont.render(f"Fuel: {self.fuelUsed} %", False, (255,255,255))
-                fuelSurf_rect = fuelSurf.get_rect()
-                fuelSurf_rect.topleft = (20,80)
-
-                player_hp = Game.mediumFont.render(f"Health: {self.player.health}", False, (255,255,255))
-                player_hp_rect = player_hp.get_rect()
-                player_hp_rect.topleft = (20,20)
-
-            # rendering happens outside game pause logic, as rendering is purely
-
-            self.screen.blit(self.player.images[f'{self.player.frame}'],self.player.rect) # render player
-
-            for i in self.alive_enemies:            # render enemies
-                self.screen.blit(i.surf,i.rect)
-
-            self.screen.blit(dTSurf,dTSurf_rect) # render Distance Travelled (top right)
-            self.screen.blit(player_hp,player_hp_rect) # render player hp (top left)
-            self.screen.blit(fuelSurf,fuelSurf_rect) # render Fuel Left (top left)
-            
-
-            if self.player.fuel <= 0:
-                self.screen.blit(self.gameoverText,self.gameoverText_rect)
-                self.player.fuel = 0
-
-            if self.show_rect_outlines:
-                
-                pygame.draw.lines(surface=self.screen,color=(255,255,255),closed=True,points=self.player.hitbox)
-                for i in self.alive_enemies:
-                    pygame.draw.lines(surface=self.screen,color=(255,255,255),closed=True,points=i.hitbox)
-
-            if self.showVars: # So I can view variables in runtime rather than relying on pdb breakpoints
-                developer_overlay = [[],[],[]] # list stores text renders in different categories
-
-                if len(self.fpsAVGlist) < 61: # average fps calculations and logic
-                    self.fpsAVGlist.append(round(1/(self.tt/1000)))
-                else: 
-                    for i in self.fpsAVGlist:
-                        self.fpsAVG += i
-                    self.fpsAVG /= len(self.fpsAVGlist)
-                    self.fpsAVG =round(self.fpsAVG)
-                    self.fpsAVGlist = []
-
-                
-                
-                y=1060
-                x=0
-                variables = [ # variables that are displayed when F1 is pressed
-                        {
-                            "running":f"{self.running} (should not say False!)",
-                            "paused":self.paused,
-                            "show_variables":self.showVars,
-                            "show_hitboxes":self.show_rect_outlines,
-                            "slow_tps":self.slow_tps,
-                            "game_over":self.game_over,
-                            "game_win":self.game_win,
-                            "Flags":""
-                        },
-                        {
-                            "selected_map":self.selectedMap,
-                            "player_pos":self.player.rect.center,
-                            "background_scroll":self.bg_scroll,
-                            "fuel_used":self.fuelUsed,
-                            "distance_travelled":self.distanceTravelled,
-                            "enemies_alive":len(self.alive_enemies),
-                            "spawn_size":self.spawn_size,
-                            "tick_speed_ms":self.tt,
-                            "ticks_per_second": round(1/(self.tt/1000)),
-                            "Avg_ticks_per_second":self.fpsAVG,
-                            "CPU":psutil.cpu_percent(),
-                            "Memory":round(psutil.Process().memory_info().vms)/1000000,
-                            "Variables":""
-                        },
-                        {
-                            
-                            "screen": self.screen.__repr__(),
-                            "player": self.player.__repr__(),
-                            "background": self.background.__repr__(),
-                            "fuelSurf": fuelSurf.__repr__(),
-                            "dTSurf":dTSurf.__repr__(),
-                            "enemies_alive":self.alive_enemies,
-                            "Objects":""
-                        }
-                ]
-
-                # some very BASIC dictionary algebra or smth (took me like 20 minutes to do)
-                # iterates through the varaibles dictionary defined above, and blits rendered texts
-
-                for n,i in enumerate(variables): # i is the nested dictionary, n is the number of iterations through the base dictionary
-
-                    for i_ in i: # i_ are the key | value pairs inside the dictionaries. NOTE: it is important to get the value from the i_ key 
-
-                        if type(i.get(i_)) != type(list()): # looks for any lists
-                            developer_overlay[n].append(Game.smallFont.render(f"{i_}: {i.get(i_)}",False,(255,255,255)))
-                        else:
-                            for n2,i__ in enumerate(i.get(i_)): # i__ is the values inside the list inside the nested dictionaries, n2 is the number of iterations inside said list
-                                developer_overlay[n].append(Game.smallFont.render(f"{n2}: {i__.__repr__()}",False,(255,255,255)))
-
-                            developer_overlay[n].append(Game.smallFont.render(f"{i_}: ",False,(255,255,255)))
-
-                for a in developer_overlay:
-                    for a_ in a:
-                        self.screen.blit(a_,(x,y))
-                        y-=20
-                    x+= 500                 
-                    y=1060
-
-            if self.slow_tps:
-                global FPS
-                FPS = 2
-            else:
-                FPS = 60
-
-                
-
-            pygame.display.flip()
-            Game.clock.tick(FPS)
-            self.t2 = time.time_ns()
-            self.tt = (self.t2-self.t1)/1000000
 
 class Game():  # all game constants are stored in this easier than globals class. It allows me to access any of the variables anywhere
                # in the file. Although it may be seen as contemporary, i see it as useful thus why it exists. (I was also running into
@@ -862,16 +24,17 @@ class Game():  # all game constants are stored in this easier than globals class
     screen = pygame.display.set_mode(size=(1920,1080),vsync=1,display=0)
     clock = pygame.time.Clock()
     Maps = ("Terran","Lithos","Glacio","Solaris","Nova")
+
     def __init__(self) -> None:
         
         self.running = True
         self.menus = ("main","singleplayer","multiplayer","settings","credits")
         self.currentMenu = self.menus[0]
-        self.mainMenu = main_menu()
-        self.singleplayerMenu = singleplayer_menu()
-        self.settingsMenu = settings_menu()
-        self.creditsMenu = credits_menu()
-        self.multiplayerMenu = multiplayer_menu()
+        self.mainMenu = self.main_menu()
+        self.singleplayerMenu = self.singleplayer_menu()
+        self.settingsMenu = self.settings_menu()
+        self.creditsMenu = self.credits_menu()
+        self.multiplayerMenu = self.multiplayer_menu()
         self.ingame_running = False
         self.selectedMap = None
 
@@ -901,14 +64,439 @@ class Game():  # all game constants are stored in this easier than globals class
                     self.creditsMenu.run(self,self.events)
 
             elif self.ingame_running and self.singleplayerMenu.selMapName == "Nova": #in self.Maps once other maps get added
+                from ingame import in_game
                 self.ingame = in_game(self,self.singleplayerMenu.selMapName)
-                self.ingame.run()
+                self.ingame.update()
                 self.ingame_running = None
             
             else: self.ingame_running = False
             
             pygame.display.flip()
             self.clock.tick(FPS)
+
+
+
+    class Label():   # the Label and Button objects are similar to that of the tkinter Label and
+                    # button objects in such a way that they can be used anywhere and with extremely
+                    # generalised parameters. This also helps with consistency throughout the game so
+                    # that my buttons don't look like how I was feeling when I coded them that day
+
+                    # by default the anchor for the label and button is center
+
+        def __init__(self,pos: tuple,text: str,**largs) -> None: 
+                
+            self.text = largs.get("font",Game.mediumFont).render(text,True,(255,255,255)) # defaults to medium font
+            self.text_rect = self.text.get_rect()
+            setattr(self.text_rect,largs.get("anchor","center"),pos)
+            
+        def render(self):                              
+            Game.screen.blit(self.text,self.text_rect)
+
+    class Button():
+        
+        def __init__(self,pos: tuple,text: str,**bargs) -> None:
+            
+
+            self.anchor = bargs.get("anchor","center")              # Default Anchor = Center
+            self.buttonsize = bargs.get("size",(200,50))            # Default Size = 200 wide ,50 high
+            self.name = bargs.get("name", None)                     # Default Name = None
+            self.alpha = bargs.get("alpha", 255)                    # Default Alpha = 255
+
+            self.surf = pygame.Surface(self.buttonsize)
+            self.surf.fill((5,5,5))
+            self.rect = self.surf.get_rect()
+            setattr(self.rect,self.anchor,pos)
+
+            self.description = text.lower()
+
+            self.text = Game.mediumFont.render(text,True,(255,255,255))
+            self.text_rect = self.text.get_rect()
+            setattr(self.text_rect,self.anchor,pos)
+
+            self.surf.set_alpha(self.alpha)
+
+        def render(self) -> None:
+            Game.screen.blit(self.surf,self.rect)
+            Game.screen.blit(self.text,self.text_rect)
+                
+        def run(self ,game ,events: list) -> None:
+            mousepos = pygame.mouse.get_pos()
+            
+            if not self.rect.collidepoint(mousepos):
+                self.surf.fill((0,0,0))
+
+            for event in events: # the great wall of button events, could be made SO much more efficient
+                                # however, it works how it is and if I touch one thing it just completely breaks everything
+                                # each button identifier has its own set of statements and conditionals so everybutton doesnt
+                                # do the same thing, if I put the mouse hover highlight outside of an Identifier then it would 
+                                # highlight all buttons rather than just the one the user is hovering.
+
+                if self.description == "quit": # Button identifier
+                    if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
+                        pygame.mixer.music.play()                               
+                        self.surf.fill((20,20,30))
+                    if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1: # Event conditional statement
+                        game.running = False
+                    if self.rect.collidepoint(mousepos):                                                    # Mouse hover highlight
+                        self.surf.fill((10,10,20))
+            
+                elif self.description == "singleplayer":
+                    if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
+                        pygame.mixer.music.play()
+                        self.surf.fill((20,20,30))
+                    if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
+                        game.currentMenu = game.menus[1]
+                        self.surf.fill((0,0,0))
+                    if self.rect.collidepoint(mousepos):
+                        self.surf.fill((10,10,20))
+
+                elif self.description == "multiplayer":
+                    if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
+                        pygame.mixer.music.play()
+                        self.surf.fill((20,20,30))
+                    if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
+                        game.currentMenu = game.menus[2]
+                        self.surf.fill((0,0,0))
+                    if self.rect.collidepoint(mousepos):
+                        self.surf.fill((10,10,20))
+
+                elif self.description == "settings":
+                    if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
+                        pygame.mixer.music.play()
+                        self.surf.fill((20,20,30))
+                    if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
+                        game.currentMenu = game.menus[3]
+                        self.surf.fill((0,0,0))
+                    if self.rect.collidepoint(mousepos):
+                        self.surf.fill((10,10,20))
+
+                elif self.description == "credits":
+                    if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
+                        pygame.mixer.music.play()
+                        self.surf.fill((20,20,30))
+                    if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
+                        game.currentMenu = game.menus[4]
+                        self.surf.fill((0,0,0))
+                    if self.rect.collidepoint(mousepos):
+                        self.surf.fill((10,10,20))
+
+                elif self.description == "return":
+                    if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
+                        pygame.mixer.music.play()
+                        self.surf.fill((20,20,30))
+                    if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
+                        game.currentMenu = game.menus[0]
+                        self.surf.fill((0,0,0))
+                    if self.rect.collidepoint(mousepos):
+                        self.surf.fill((10,10,20))
+
+                elif self.description =="select" and game.currentMenu == "singleplayer":
+                    if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
+                        pygame.mixer.music.play()
+                        self.surf.fill((20,20,30))
+                    if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
+                        game.ingame_running = True
+                    if self.rect.collidepoint(mousepos):
+                        self.surf.fill((10,10,20))
+
+                elif (self.description =="next" and game.currentMenu == "singleplayer") or self.name == "sPlay_right":
+                    if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
+                        pygame.mixer.music.play()
+                        self.surf.fill((20,20,30))
+                    if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
+                        game.singleplayerMenu.prevMapCard += 1
+                        game.singleplayerMenu.selMapCard += 1
+                        game.singleplayerMenu.nextMapCard += 1
+                    if self.rect.collidepoint(mousepos):
+                        self.surf.fill((10,10,20))
+
+                elif (self.description =="previous" and game.currentMenu == "singleplayer") or self.name == "sPlay_left":
+                    if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
+                        pygame.mixer.music.play()
+                        self.surf.fill((20,20,30))
+                    if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
+                        game.singleplayerMenu.prevMapCard -= 1
+                        game.singleplayerMenu.selMapCard -= 1
+                        game.singleplayerMenu.nextMapCard -= 1
+                    if self.rect.collidepoint(mousepos):
+                        self.surf.fill((10,10,20))
+
+                elif self.name=="sPlay_center":
+                    if event.type == MOUSEBUTTONDOWN and self.rect.collidepoint(mousepos) and event.button==1:
+                        pygame.mixer.music.play()
+                    if event.type == MOUSEBUTTONUP and self.rect.collidepoint(mousepos) and event.button==1:
+                        if game.singleplayerMenu.flipCard:
+                            game.singleplayerMenu.flipCard =False
+                        else: game.singleplayerMenu.flipCard = True         
+
+    class main_menu():  # menu class type objects: they are the defining parts of the game that allow me to easily organise 
+                        # different menus and objects. Generally speaking they are self-sufficient meaning they define and manage 
+                        # their own variables only needing to be externally ran by the Game() class. An exception to this applies 
+                        # to the in_game() class.
+
+        def __init__(self) -> None:
+            self.labels = [
+                Game.Label((960,240),"Block Dodge",font=Game.largeFont)
+
+            ]
+            self.buttons = [
+                Game.Button((960,400),"Singleplayer"),
+                Game.Button((960,500),"Multiplayer"),
+                Game.Button((960,600),"Settings"),
+                Game.Button((960,700),"Credits"),
+                Game.Button((960,800),"Quit")
+
+            ]
+        def run(self,game,events):
+            for label in self.labels:
+                label.render()
+
+            for button in self.buttons:
+                button.render()
+                button.run(game,events)
+
+    class Slider: # Slider, W.I.P similar to the Button and Labels in that they can be used anywhere with general parameters
+                # iirc there is a similar class type object in tkinter. The majority of the code in __init__ was made by a
+                # guy who did a tutorial on yt
+        def __init__(self, pos: tuple, size: tuple, button_width: int, initial_val: float, min: int, max: int) -> None:
+            self.pos = pos
+            self.size = size 
+            self.button_width = button_width
+
+            self.max = max
+            self.min = min
+            
+            self.slider_left_pos = self.pos[0] - (size[0]//2)
+            self.slider_right_pos = self.pos[0] + (size[0]//2)
+            self.slider_top_pos = self.pos[1] - (size[1]//2)
+
+            self.initial_val = (self.slider_right_pos-self.slider_left_pos)*initial_val
+
+            self.clicked = False
+
+            self.container_rect = pygame.Rect(self.slider_left_pos, self.slider_top_pos, self.size[0], self.size[1])
+            self.button_rect = pygame.Rect(self.slider_left_pos+self.initial_val - 5, self.slider_top_pos, self.button_width, self.size[1])
+
+        def move_slider(self,mouse_pos): 
+            # moves slider button rect to mouse x position if mouse button 1 is down in the container rect and checks too see if slider button rect is outside container rect x value. Y value is unaffected
+
+            if self.button_rect.left >= self.container_rect.left and self.button_rect.right <= self.container_rect.right:
+                    self.button_rect.centerx = mouse_pos[0]
+
+            if self.button_rect.left < self.container_rect.left:
+                self.button_rect.left = self.container_rect.left
+
+            if self.button_rect.right > self.container_rect.right:
+                self.button_rect.right = self.container_rect.right
+            
+        def render(self, screen):
+            pygame.draw.rect(screen,"darkgray", self.container_rect)
+            pygame.draw.rect(screen,"blue", self.button_rect)
+
+        def get_value(self):
+            val_range = self.slider_right_pos - self.slider_left_pos
+            button_val  = self.button_rect.centerx - self.slider_left_pos 
+
+            return (button_val/val_range)*(self.max-self.min)+self.min
+
+    class singleplayer_menu():
+        class mapCard():               # Sub Class use: I use sub classes to organise code even further than before. i.e mapCard isn't used
+                                    # by any other class in the whole file so why put it outside singpleplayer_menu().
+            def __init__(self, map: str) -> None:
+                self.mapName = map
+
+                self.mapImage = pygame.image.load(f"Game/assets/visual/MapCards/Previews/Pixelated/{map}.png")
+                self.mapDesc = pygame.image.load(f"Game/assets/visual/MapCards/Descriptions/{map}.png")
+                self.scaledMapImage = pygame.image.load(f"Game/assets/visual/MapCards/Previews/Pixelated/{map}.png")
+                
+                self.scaledMapImage = pygame.transform.scale_by(self.scaledMapImage,0.75)
+
+                self.scaledMapImage_Rect = self.scaledMapImage.get_rect()
+                self.mapDesc_Rect = self.mapDesc.get_rect()
+                self.mapImage_Rect = self.mapImage.get_rect()
+                
+                
+                self.mapImageBG = pygame.image.load(f"Game/assets/visual/MenuBG/Blur/{map}.png")
+                self.mapImageBG.set_alpha(90)
+                self.mapImage_RectBG = self.mapImageBG.get_rect(center=FRAMECENTRE)
+
+            # different render functions exist in the mapCard object purely to render scaled versions of the large image to different locations. It prevents a large amount of loading that could have been possible
+            # if a different approach was taken. This method loads 18 images, 12 scaled down 0.75x, 6 kept normal resolution. It can be time consuming switching to different methods. If it works it works.
+            
+            def renderBG(self):
+                Game.screen.blit(self.mapImageBG,self.mapImage_RectBG)
+                self.desc = None
+
+            def renderCenter(self):
+                self.mapImage_Rect.center = (960,500)
+                Game.screen.blit(self.mapImage,self.mapImage_Rect)
+                
+            def renderLeft(self):
+                self.scaledMapImage_Rect.center = (660,500)
+                Game.screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
+
+            def renderRight(self):
+                self.scaledMapImage_Rect.center = (1260,500)
+                Game.screen.blit(self.scaledMapImage,self.scaledMapImage_Rect)
+
+            def renderDesc(self):
+                self.mapDesc_Rect.center = (960,500)
+                Game.screen.blit(self.mapDesc,self.mapDesc_Rect)
+
+        
+        def __init__(self) -> None:
+            # selectors will define which map 
+            self.prevMapCard = 4
+            self.selMapCard = 0
+            self.nextMapCard = 1
+
+            self.flipCard = False
+
+            self.labels = [
+                Game.Label((960,100),"Select Map",font=Game.largeFont)
+
+            ]
+
+            self.buttons = [
+                Game.Button((1110,900),"Next"),
+                Game.Button((810,900),"Previous"),
+                Game.Button((100,980),"Return"),
+                Game.Button((960,1000),"Select"),
+                Game.Button((660,500),"",name="sPlay_left",size=(300,600),alpha=0),      # a "name" keyword argument was used to prevent text from being displayed, despite the fact mapCards are rendered ontop of the Buttons. 
+                Game.Button((1260,500),"",name="sPlay_right",size=(300,600),alpha=0),    # note the size keyword arguement, which I specifically implemented for this use case. It may be used in the future which is why I fully implemented it
+                Game.Button((960,500),"",name="sPlay_center",size=(300,600),alpha=0),    # also note that I used the **kwargs parameter method so I did not have to have to change the arguments for every Button and Label object.
+            ]
+
+            self.mapCards = [               # list of mapCard objects
+                self.mapCard("Terran"),
+                self.mapCard("Lithos"),
+                self.mapCard("Glacio"),
+                self.mapCard("Solaris"),
+                self.mapCard("Nova")
+            ]
+            
+        def boundaryFix(self,boundLeft: int,number: int, boundRight:int ): 
+            # boundLeft is by default 0 (the start of every list), number is the number being checked, boundRight is the length of the list of which the number is being checked against
+            if number < boundLeft:
+                number = boundRight
+                
+            if number > boundRight:
+                number = boundLeft
+
+            return number
+
+        def run(self,game,events):
+
+            # to prevent list of out of bounds error we check that the selector isn't outside of the length of items inside self.mapCards list, which contains the mapCard objects
+            self.prevMapCard = self.boundaryFix(0, self.prevMapCard, len(self.mapCards)-1)
+            self.selMapCard = self.boundaryFix(0, self.selMapCard, len(self.mapCards)-1)
+            self.nextMapCard = self.boundaryFix(0, self.nextMapCard, len(self.mapCards)-1)
+
+            self.selMapName = str(self.mapCards[self.selMapCard].mapName)
+            
+            
+
+            self.mapCards[self.selMapCard].renderBG()
+            # to prevent abnormal visiuals we want the buttons to be rendered after the background but not before the mapCards
+
+            for button in self.buttons:     
+                button.render()
+
+            self.mapCards[self.prevMapCard].renderLeft()
+            self.mapCards[self.selMapCard].renderCenter()
+            self.mapCards[self.nextMapCard].renderRight()
+
+
+            # renders map description ontop of map preview if the flipCard value is set to true via the button conditional statements
+            if self.flipCard:
+                self.mapCards[self.selMapCard].renderDesc()
+            
+
+
+            # selMapCard, prevMapCard, and nextMapCard updaters must go after this or before boundary fixing to prevent list out of range error
+
+            for button in self.buttons:
+                button.run(game, events)
+
+            for label in self.labels:
+                label.render()
+
+    class multiplayer_menu():
+        def __init__(self) -> None:
+            self.labels = [
+                Game.Label((960,100),"Multiplayer",font=Game.largeFont),
+                Game.Label((960,200),"W.I.P",font=Game.largeFont)
+            ]
+            self.buttons = [
+                Game.Button((100,980),"Return")
+            ]
+        def run(self,game,events):
+            for label in self.labels:
+                label.render()
+
+            for button in self.buttons:
+                button.run(game,events)
+                button.render()
+
+    class settings_menu():  
+        def __init__(self) -> None:
+
+            self.labels = [
+                Game.Label((300,100),"Settings",font=Game.largeFont),
+                Game.Label((300,200),"W.I.P",font=Game.largeFont),
+                Game.Label((300,300),"In Game Controls:",font=Game.mediumFont),
+                Game.Label((300,350),"Movement: 'W A S D'",font=Game.mediumFont),
+                Game.Label((300,400),"Boost: Left Shift",font=Game.mediumFont),
+                Game.Label((300,450),"variables:'1'",font=Game.mediumFont),
+                Game.Label((300,500),"Pause: esc or '2' or 'p'",font=Game.mediumFont),
+                Game.Label((300,550),"Show hitboxes: '3'",font=Game.mediumFont),
+                Game.Label((300,600),"Slow tps: '4'",font=Game.mediumFont),
+                Game.Label((300,650),"return from in game: '7'",font=Game.mediumFont),
+                Game.Label((300,700),"pdb breakpoint: '8'",font=Game.mediumFont),
+                Game.Label((300,750),"exit runtime: '9'",font=Game.mediumFont),
+            ]
+            self.sliders = [
+                Game.Slider(pos=(1160,500),size=(200,10),button_width=10,initial_val=0.5,min=0,max=100),
+                ]  
+            self.buttons = [
+                Game.Button((100,980),"Return")
+            ]
+        def run(self,game,events):
+            for label in self.labels:
+                label.render()
+            
+            mouse_pos = pygame.mouse.get_pos()
+            for slider in self.sliders:
+                slider.render(Game.screen)
+                if pygame.mouse.get_pressed()[0] and slider.container_rect.collidepoint(mouse_pos):
+                    slider.move_slider(mouse_pos)      
+                    print(round(slider.get_value()))
+
+            for button in self.buttons:
+                button.run(game, events)
+                button.render()
+                
+    class credits_menu():
+        def __init__(self) -> None:
+            self.labels = [
+                Game.Label((960,240),"Credits",font=Game.largeFont),
+                Game.Label((960,400),"Lead Development: Joseph Wilson",font=Game.mediumFont),
+                Game.Label((960,500),"Visuals: Joseph Wilson",font=Game.mediumFont),
+                Game.Label((960,600),"Music: RE-Logic",font=Game.mediumFont),
+                Game.Label((960,700),"Programming: Joseph Wilson",font=Game.mediumFont),
+            ]
+
+            self.buttons = [
+                Game.Button((100,980),"Return")
+            ]
+
+        def run(self,game,events):
+            for label in self.labels:
+                label.render()
+
+            for button in self.buttons:
+                button.render()
+                button.run(game, events)
 
 game = Game()
 game.run()
