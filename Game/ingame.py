@@ -122,10 +122,13 @@ class in_game():
         self.t2 = 0
         self.tt = 0
         self.fpsAVGlist = []
+        self.cpuAVGlist = []
         self.fpsAVG = 0
+        self.cpuAVG = 0
         self.spawn_size = 0
         self.show_rect_outlines= False
         self.slow_tps = False
+        
 
         self.background=pygame.image.load(f"Game/assets/visual/IngameBackgrounds/Pixelated/Nova_+GLACIO.png")
         self.background.set_alpha(100)
@@ -290,8 +293,9 @@ class in_game():
             
             if self.showVars: # So I can view variables in runtime rather than relying on pdb breakpoints
                 developer_overlay = [[],[],[]] # list stores text renders in different categories
+                self.cpu = psutil.cpu_percent()
 
-                if len(self.fpsAVGlist) < 61: # average fps calculations and logic
+                if len(self.fpsAVGlist) < 61: # average fps calculations and logic. Has a sample size of 60, this means an ideal sample would take exactly one second
                     self.fpsAVGlist.append(round(1/(self.tt/1000)))
                 else: 
                     for i in self.fpsAVGlist:
@@ -299,6 +303,14 @@ class in_game():
                     self.fpsAVG /= len(self.fpsAVGlist)
                     self.fpsAVG =round(self.fpsAVG)
                     self.fpsAVGlist = []
+                if len(self.cpuAVGlist) < 31: # average cpu calculations and logic. Has a sample size of 60, this means an ideal sample would take exactly one second
+                    self.cpuAVGlist.append(round(self.cpu))
+                else: 
+                    for i in self.cpuAVGlist:
+                        self.cpuAVG += i
+                    self.cpuAVG /= len(self.cpuAVGlist)
+                    self.cpuAVG =round(self.cpuAVG)
+                    self.cpuAVGlist = []
 
 
 
@@ -329,7 +341,8 @@ class in_game():
                             "tick_speed_ms":self.tt,
                             "ticks_per_second": round(1/(self.tt/1000)),
                             "Avg_ticks_per_second":self.fpsAVG,
-                            "CPU":psutil.cpu_percent(),
+                            "CPU":self.cpu,
+                            "Average_CPU": self.cpuAVG,
                             "Memory":round(psutil.Process().memory_info().vms)/1000000,
                             "Variables":""
                         },
